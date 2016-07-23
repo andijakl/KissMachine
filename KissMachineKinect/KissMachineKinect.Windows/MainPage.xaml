@@ -2,12 +2,42 @@
     x:Class="KissMachineKinect.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:KissMachineKinect"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    mc:Ignorable="d">
+    xmlns:controls="using:KissMachineKinect.Controls"
+    xmlns:converter="using:KissMachineKinect.Converter"
+    mc:Ignorable="d"
+    DataContext="{Binding RelativeSource={RelativeSource Self}}"
+    RequestedTheme="Dark">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <converter:CountdownIntToStringConverter x:Key="CountdownIntToStringConverter" />
+        <converter:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
+    </Page.Resources>
 
+    <Grid x:Name="LayoutRoot">
+        <MediaElement x:Name="SpeakerMedia" AutoPlay="False" />
+
+        <Viewbox x:Name="MainViewbox">
+            <Grid x:Name="DisplayGrid">
+
+                <Image Name="ColorImg" Stretch="UniformToFill" />
+                <TextBlock x:Name="DistTxt" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="36"/>
+                <TextBlock x:Name="CountdownTxt" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="120" FontFamily="Pristina" 
+                           Text="{Binding PhotoCountDown, Converter={StaticResource CountdownIntToStringConverter}}"
+                           Visibility="{Binding PhotoCountDown, Converter={StaticResource IntToVisibilityConverter}}">
+                    <TextBlock.Foreground>
+                        <SolidColorBrush Color="{StaticResource CustomAccentColor}"/>
+                    </TextBlock.Foreground>
+                </TextBlock>
+
+            </Grid>
+
+        </Viewbox>
+
+        <!-- Busy Indicator -->
+        <controls:BusyControl Grid.Row="0" 
+                               IsBusy="{Binding BusyStatus.IsBusy}" BusyText="{Binding BusyStatus.BusyText}" 
+                               BusyEnd="{Binding BusyStatus.BusyEnd}" BusyEndedCommand="{Binding BusyEndedCommand}"/>
     </Grid>
 </Page>

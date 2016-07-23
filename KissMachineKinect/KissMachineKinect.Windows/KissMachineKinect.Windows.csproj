@@ -4,20 +4,18 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>8485b714-5ebe-426a-a910-d412538a86c0</ProjectGuid>
+    <ProjectGuid>{8485B714-5EBE-426A-A910-D412538A86C0}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>KissMachineKinect</RootNamespace>
-    <AssemblyName>KissMachineKinect.Windows</AssemblyName>
+    <AssemblyName>KissMachineKinect</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformVersion>8.1</TargetPlatformVersion>
     <MinimumVisualStudioVersion>12</MinimumVisualStudioVersion>
     <FileAlignment>512</FileAlignment>
     <SynthesizeLinkMetadata>true</SynthesizeLinkMetadata>
     <ProjectTypeGuids>{BC8A1FFA-BEE3-4634-8014-F334798102B3};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    
     <PackageCertificateKeyFile>KissMachineKinect.Windows_TemporaryKey.pfx</PackageCertificateKeyFile>
-    	
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -106,20 +104,54 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <SDKReference Include="Microsoft.Kinect.Face, Version=2.0">
+      <Name>Microsoft.Kinect.Face</Name>
+    </SDKReference>
+    <SDKReference Include="Microsoft.Kinect.Fusion, Version=2.0">
+      <Name>Microsoft.Kinect.Fusion</Name>
+    </SDKReference>
+    <SDKReference Include="Microsoft.Kinect.Toolkit.Input, version=2.0">
+      <Name>Microsoft.Kinect.Toolkit.Input</Name>
+    </SDKReference>
+    <SDKReference Include="Microsoft.Kinect.Xaml.Controls, Version=2.0">
+      <Name>Microsoft.Kinect.Xaml.Controls</Name>
+    </SDKReference>
+    <SDKReference Include="Microsoft.VCLibs, version=12.0">
+      <Name>Microsoft Visual C++ 2013 Runtime Package for Windows</Name>
+    </SDKReference>
+    <SDKReference Include="WindowsPreview.Kinect, version=2.0">
+      <Name>WindowsPreview.Kinect</Name>
+    </SDKReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Controls\BusyControl.xaml.cs">
+      <DependentUpon>BusyControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Converter\BoolToVisibilityConverter.cs" />
+    <Compile Include="Converter\CountdownIntToStringConverter.cs" />
+    <Compile Include="Converter\IntToVisibilityConverter.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Models\BusyStatus.cs" />
+    <Compile Include="Models\KissPositionModel.cs" />
+    <Compile Include="Models\MinPlayerLine.cs" />
+    <Compile Include="Models\Vec3.cs" />
+    <Compile Include="Models\PlayerInfo.cs" />
+    <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\SpeechService.cs" />
+    <Compile Include="Utilities\DrawingUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
-	
     <None Include="KissMachineKinect.Windows_TemporaryKey.pfx" />
-        
+    <PRIResource Include="Strings\en\Resources.resw" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\Logo.scale-100.png" />
@@ -128,7 +160,18 @@
     <Content Include="Assets\StoreLogo.scale-100.png" />
   </ItemGroup>
   <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Page Include="Controls\BusyControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="MainPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Styles\CustomStyles.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -136,7 +179,6 @@
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>
   </PropertyGroup>
-  <Import Project="..\KissMachineKinect.Shared\KissMachineKinect.Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
