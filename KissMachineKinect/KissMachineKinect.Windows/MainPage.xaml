@@ -16,27 +16,51 @@
     </Page.Resources>
 
     <Grid x:Name="LayoutRoot">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="7*"></RowDefinition>
+            <RowDefinition Height="1*"></RowDefinition>
+            <RowDefinition Height="1*"></RowDefinition>
+            <RowDefinition Height="1*"></RowDefinition>
+            <RowDefinition Height="1*"></RowDefinition>
+        </Grid.RowDefinitions>
         <MediaElement x:Name="SpeakerMedia" AutoPlay="False" />
 
-        <Viewbox x:Name="MainViewbox">
+        <Viewbox Grid.Row="0" Grid.RowSpan="5" x:Name="MainViewbox">
             <Grid x:Name="DisplayGrid">
-
-                <Image Name="ColorImg" Stretch="UniformToFill" />
-                <TextBlock x:Name="DistTxt" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="36"/>
-                <TextBlock x:Name="CountdownTxt" HorizontalAlignment="Center" VerticalAlignment="Top" FontSize="120" FontFamily="Pristina" 
-                           Text="{Binding PhotoCountDown, Converter={StaticResource CountdownIntToStringConverter}}"
-                           Visibility="{Binding PhotoCountDown, Converter={StaticResource IntToVisibilityConverter}}">
-                    <TextBlock.Foreground>
-                        <SolidColorBrush Color="{StaticResource CustomAccentColor}"/>
-                    </TextBlock.Foreground>
-                </TextBlock>
-
+                <Image Name="ColorImg" Stretch="UniformToFill"/>
             </Grid>
-
         </Viewbox>
 
+        <Rectangle Grid.Row="2" Grid.Column="0" VerticalAlignment="Stretch" 
+                   HorizontalAlignment="Stretch" Fill="{StaticResource CustomAccentLightTransparentBrush}"
+                   Visibility="{Binding PhotoCountDown, Converter={StaticResource IntToVisibilityConverter}}"  />
+        <Viewbox Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                 Grid.Row="1" Grid.RowSpan="3" Grid.Column="0"
+                 Visibility="{Binding PhotoCountDown, Converter={StaticResource IntToVisibilityConverter}}" >
+            <TextBlock x:Name="HeartBackground" Text="&#xE00B;" 
+                       FontFamily="Segoe MDL2 Assets" 
+                       Foreground="{StaticResource CustomAccentBrush}" FontSize="100" 
+                       HorizontalAlignment="Center" VerticalAlignment="Stretch"  />
+        </Viewbox>
+
+        <TextBlock x:Name="CountdownTxt" 
+                           Grid.Row="1" Grid.RowSpan="3" 
+                           HorizontalAlignment="Center" VerticalAlignment="Center" 
+                           TextAlignment="Center"
+                           FontSize="80" FontFamily="Gabriola" 
+                           TextLineBounds="Tight" 
+                           Text="{Binding PhotoCountDown, Converter={StaticResource CountdownIntToStringConverter}}"
+                           Visibility="{Binding PhotoCountDown, Converter={StaticResource IntToVisibilityConverter}}" 
+                           Foreground="White">
+            Text
+        </TextBlock>
+
+        <!-- Debug only: distance information -->
+        <TextBlock x:Name="DistTxt" 
+                           Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="36"/>
+
         <!-- Busy Indicator -->
-        <controls:BusyControl Grid.Row="0" 
+        <controls:BusyControl Grid.Row="0" Grid.RowSpan="5"
                                IsBusy="{Binding BusyStatus.IsBusy}" BusyText="{Binding BusyStatus.BusyText}" 
                                BusyEnd="{Binding BusyStatus.BusyEnd}" BusyEndedCommand="{Binding BusyEndedCommand}"/>
     </Grid>

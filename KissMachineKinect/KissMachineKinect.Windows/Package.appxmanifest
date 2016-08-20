@@ -15,8 +15,13 @@
   </Resources>
   <Applications>
     <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="KissMachineKinect.Windows.App">
-      <m2:VisualElements DisplayName="Kiss Machine for Microsoft Kinect v2" Square150x150Logo="Assets\Logo.png" Square30x30Logo="Assets\SmallLogo.png" Description="Kiss Machine" ForegroundText="light" BackgroundColor="#464646">
-        <m2:SplashScreen Image="Assets\SplashScreen.png" />
+      <m2:VisualElements DisplayName="Kiss Machine for Microsoft Kinect v2" Square150x150Logo="Assets\Logo.png" Square30x30Logo="Assets\SmallLogo.png" Description="Kiss Machine" ForegroundText="light" BackgroundColor="#000000">
+        <m2:DefaultTile ShortName="Kiss Machine">
+          <m2:ShowNameOnTiles>
+            <m2:ShowOn Tile="square150x150Logo" />
+          </m2:ShowNameOnTiles>
+        </m2:DefaultTile>
+        <m2:SplashScreen Image="Assets\SplashScreen.png" BackgroundColor="#000000" />
       </m2:VisualElements>
     </Application>
   </Applications>

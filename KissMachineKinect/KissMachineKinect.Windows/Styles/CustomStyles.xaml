@@ -12,6 +12,8 @@
     <SolidColorBrush x:Key="CustomAccentBrush" Color="{StaticResource CustomAccentColor}" Opacity="1.0"/>
     <SolidColorBrush x:Key="CustomAccentLightBrush" Color="{StaticResource CustomAccentColorLight}" Opacity="1.0"/>
 
+    <SolidColorBrush x:Key="CustomAccentLightTransparentBrush" Color="{StaticResource CustomAccentColorLight}" Opacity="0.5"/>
+
     <Style x:Key="BigTitleStyle" BasedOn="{StaticResource TitleTextBlockStyle}" TargetType="TextBlock">
         <Setter Property="Foreground">
             <Setter.Value>

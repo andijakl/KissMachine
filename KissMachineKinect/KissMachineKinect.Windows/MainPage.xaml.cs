@@ -36,6 +36,10 @@ namespace KissMachineKinect
     /// </summary>
     public sealed partial class MainPage : Page, INotifyPropertyChanged
     {
+        // Distance config
+        private const float ShowHintKissDistance = 0.6f;
+        private const float TriggerKissCountdownDistance = 0.3f;
+
         // Screenshots
         private const FileFormat DefaultPhotoFileFormat = FileFormat.Png;
         private const string DefaultPhotoFileName = "kiss_{0:yyyy-MM-dd_HH-mm-ss}";
@@ -311,31 +315,26 @@ namespace KissMachineKinect
         #region Color Frames
         private void Reader_ColorFrameArrived(ColorFrameReader sender, ColorFrameArrivedEventArgs args)
         {
-            bool colorFrameProcessed = false;
+            var colorFrameProcessed = false;
 
             // ColorFrame is IDisposable
-            using (ColorFrame colorFrame = args.FrameReference.AcquireFrame())
+            using (var colorFrame = args.FrameReference.AcquireFrame())
             {
-                if (colorFrame != null)
+                var colorFrameDescription = colorFrame?.FrameDescription;
+
+                // verify data and write the new color frame data to the display bitmap
+                if (colorFrameDescription?.Width == _bitmap.PixelWidth && (colorFrameDescription.Height == _bitmap.PixelHeight))
                 {
-                    FrameDescription colorFrameDescription = colorFrame.FrameDescription;
-
-                    // verify data and write the new color frame data to the display bitmap
-                    if ((colorFrameDescription.Width == _bitmap.PixelWidth) && (colorFrameDescription.Height == _bitmap.PixelHeight))
+                    if (colorFrame.RawColorImageFormat == ColorImageFormat.Bgra)
                     {
-                        if (colorFrame.RawColorImageFormat == ColorImageFormat.Bgra)
-                        {
-                            colorFrame.CopyRawFrameDataToBuffer(_bitmap.PixelBuffer);
-                            //colorFrame.CopyRawFrameDataToArray(_colorPixels);
-                        }
-                        else
-                        {
-                            //colorFrame.CopyConvertedFrameDataToArray(_colorPixels, ColorImageFormat.Bgra);
-                            colorFrame.CopyConvertedFrameDataToBuffer(_bitmap.PixelBuffer, ColorImageFormat.Bgra);
-                        }
-
-                        colorFrameProcessed = true;
+                        colorFrame.CopyRawFrameDataToBuffer(_bitmap.PixelBuffer);
                     }
+                    else
+                    {
+                        colorFrame.CopyConvertedFrameDataToBuffer(_bitmap.PixelBuffer, ColorImageFormat.Bgra);
+                    }
+
+                    colorFrameProcessed = true;
                 }
             }
 
@@ -343,7 +342,6 @@ namespace KissMachineKinect
             if (colorFrameProcessed)
             {
                 _bitmap.Invalidate();
-                //RenderColorPixels(_colorPixels);
             }
         }
         
@@ -354,11 +352,11 @@ namespace KissMachineKinect
             if (key == VirtualKey.Space)
             {
                 // Take screenshot when releasing the space key
-                await WriteableBitmapToStorageFile(_bitmap);
+                await SavePhotoToFile(_bitmap);
             }
         }
 
-        private async Task<StorageFile> WriteableBitmapToStorageFile(WriteableBitmap wb)
+        private async Task<StorageFile> SavePhotoToFile(WriteableBitmap wb)
         {
             var fileName = string.Format(DefaultPhotoFileName, DateTime.Now);
             Guid bitmapEncoderGuid;
@@ -440,6 +438,11 @@ namespace KissMachineKinect
                 Debug.WriteLine("Remove player: " + bodyNum + " / id: " + trackingId);
                 playerToRemove.RemoveFromWorld(_drawingCanvas);
                 _players.Remove(playerToRemove);
+                if (_players.Count < 2)
+                {
+                    _photoTaken = false;
+                    StopKissPhotoTimer();
+                }
             }
 
             //for (var i = _players.Count - 1; i >= 0; i--)
@@ -464,7 +467,7 @@ namespace KissMachineKinect
         /// </summary>
         /// <param name="sender">object sending the event</param>
         /// <param name="args">event arguments</param>
-        private void Reader_BodyFrameArrived(BodyFrameReader sender, BodyFrameArrivedEventArgs args)
+        private async void Reader_BodyFrameArrived(BodyFrameReader sender, BodyFrameArrivedEventArgs args)
         {
             using (var bodyFrame = args.FrameReference.AcquireFrame())
             {
@@ -475,7 +478,7 @@ namespace KissMachineKinect
             }
 
 
-            for (int i = 0; i < _bodies.Length; i++)
+            for (var i = 0; i < _bodies.Length; i++)
             {
                 var curBody = _bodies[i];
                 if (curBody.IsTracked)
@@ -499,7 +502,7 @@ namespace KissMachineKinect
             var minPair = CheckPlayersCloseBy();
             if (minPair != null)
             {
-                if (minPair.DistanceInM < 4.0f)
+                if (minPair.DistanceInM < ShowHintKissDistance)
                 {
                     // Draw line between heads
                     _minPlayerLine.SetPosition(minPair.Player1Pos.X, minPair.Player1Pos.Y, minPair.Player2Pos.X, minPair.Player2Pos.Y);
@@ -509,7 +512,9 @@ namespace KissMachineKinect
                 {
                     _minPlayerLine.SetVisibility(false);
                 }
-                if (minPair.DistanceInM < 0.3f)
+
+                // Trigger or stop photo?
+                if (minPair.DistanceInM < TriggerKissCountdownDistance && !_photoTaken)
                 {
                     // Start kiss timer?
                     StartKissPhotoTimer();
@@ -518,10 +523,16 @@ namespace KissMachineKinect
                 {
                     // Stop timer if it was running and reset if a photo was already taken
                     // (people have to get away from each other to start another photo)
-                    _photoTaken = false;
-                    StopKissPhotoTimer();
+                    await StopKissPhotoTimer();
+                    if (minPair.DistanceInM > ShowHintKissDistance)
+                    {
+                        _photoTaken = false;
+                    }
                 }
-                if (_photoCountdownTimer == null && minPair.DistanceInM < 4.0f)
+
+                if (_photoCountdownTimer == null && 
+                    minPair.DistanceInM < ShowHintKissDistance && 
+                    !_photoTaken)
                 {
                     // Show hint to kiss
                     SetCountdown(99);
@@ -539,7 +550,8 @@ namespace KissMachineKinect
             {
                 _players.Add(new PlayerInfo(_drawingCanvas, 1, -1)
                 {
-                    FacePosInCamera = new CameraSpacePoint {X = -0.0366f, Y = -0.0486f, Z = 1.164f}, FacePosInColor = new ColorSpacePoint {X = 972f, Y = 599f}
+                    FacePosInCamera = new CameraSpacePoint { X = -0.0366f, Y = -0.0486f, Z = 1.164f },
+                    FacePosInColor = new ColorSpacePoint { X = 972f, Y = 599f }
                 });
             }
 #endif
@@ -605,24 +617,32 @@ namespace KissMachineKinect
 
         private async void PhotoTimerCallback(object state)
         {
-            if (PhotoCountDown == 0)
-            {
-                await WriteableBitmapToStorageFile(_bitmap);
-                StopKissPhotoTimer();
-                _photoTaken = true;
-            }
             if (PhotoCountDown > 0)
             {
                 SetCountdown(PhotoCountDown - 1);
             }
+            if (PhotoCountDown == 0)
+            {
+                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+                {
+                    await StopKissPhotoTimer();
+                    await SavePhotoToFile(_bitmap);
+                    _photoTaken = true;
+                });
+            }
         }
 
-        private void StopKissPhotoTimer()
+        private async Task StopKissPhotoTimer()
         {
             if (_photoCountdownTimer == null) return;
+            Debug.WriteLine("Stopping kiss timer");
             _photoCountdownTimer.Dispose();
             _photoCountdownTimer = null;
-            SetCountdown(-1);
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            {
+                // Set to invisible
+                SetCountdown(-1);
+            });
         }
 
         private void SetCountdown(int newValue)
@@ -633,6 +653,7 @@ namespace KissMachineKinect
             _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 PhotoCountDown = newValue;
+                if (PhotoCountDown == -1) return;
                 // Convert countdown value to text
                 var textConverter = new CountdownIntToStringConverter();
                 var speakText = (string) textConverter.Convert(PhotoCountDown, typeof(string), null, Windows.Globalization.Language.CurrentInputMethodLanguageTag);
@@ -679,6 +700,23 @@ namespace KissMachineKinect
         private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        private void HeartBackground_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            TextBlock contentTextBlock = sender as TextBlock;
+            if (contentTextBlock != null)
+            {
+                double height = contentTextBlock.Height;
+                if (contentTextBlock.ActualHeight > height)
+                {
+                    // Get the ratio of the TextBlock's height to that of the TextBox’s 
+                    double fontsizeMultiplier = Math.Sqrt(height / contentTextBlock.ActualHeight);
+
+                    // Set the new FontSize 
+                    contentTextBlock.FontSize = Math.Floor(contentTextBlock.FontSize * fontsizeMultiplier);
+                }
+            }
         }
     }
 }
