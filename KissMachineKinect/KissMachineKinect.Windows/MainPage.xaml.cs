@@ -11,6 +11,10 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Windows.ApplicationModel.Resources;
 using Windows.Foundation;
+using Windows.Graphics.Imaging;
+using Windows.Storage;
+using Windows.Storage.Streams;
+using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
 using Windows.UI.Popups;
@@ -32,6 +36,21 @@ namespace KissMachineKinect
     /// </summary>
     public sealed partial class MainPage : Page, INotifyPropertyChanged
     {
+        // Screenshots
+        private const FileFormat DefaultPhotoFileFormat = FileFormat.Png;
+        private const string DefaultPhotoFileName = "kiss_{0:yyyy-MM-dd_HH-mm-ss}";
+        private readonly StorageFolder _defaultPhotoFolder = KnownFolders.PicturesLibrary;
+        private const string DefaultPhotoSubFolder = "Wedding";
+
+        private enum FileFormat
+        {
+            Jpeg,
+            Png,
+            Bmp,
+            Tiff,
+            Gif
+        }
+
         // Kinect
         private KinectSensor _sensor;
         private CoordinateMapper _coordinateMapper;
@@ -104,7 +123,9 @@ namespace KissMachineKinect
         {
             InitializeComponent();
             Loaded += MainPage_Loaded;
+            Window.Current.CoreWindow.KeyUp += CoreWindow_KeyUp;
         }
+
 
         #region Init
 
@@ -229,6 +250,8 @@ namespace KissMachineKinect
             _displayWidth = frameDescription.Width;
             _displayHeight = frameDescription.Height;
 
+            ColorImg.Source = _bitmap;
+
 
             // ----------------------------------------------------------------------------------
             // Body frames
@@ -302,11 +325,13 @@ namespace KissMachineKinect
                     {
                         if (colorFrame.RawColorImageFormat == ColorImageFormat.Bgra)
                         {
-                            colorFrame.CopyRawFrameDataToArray(_colorPixels);
+                            colorFrame.CopyRawFrameDataToBuffer(_bitmap.PixelBuffer);
+                            //colorFrame.CopyRawFrameDataToArray(_colorPixels);
                         }
                         else
                         {
-                            colorFrame.CopyConvertedFrameDataToArray(_colorPixels, ColorImageFormat.Bgra);
+                            //colorFrame.CopyConvertedFrameDataToArray(_colorPixels, ColorImageFormat.Bgra);
+                            colorFrame.CopyConvertedFrameDataToBuffer(_bitmap.PixelBuffer, ColorImageFormat.Bgra);
                         }
 
                         colorFrameProcessed = true;
@@ -317,9 +342,72 @@ namespace KissMachineKinect
             // we got a frame, render
             if (colorFrameProcessed)
             {
-                RenderColorPixels(_colorPixels);
+                _bitmap.Invalidate();
+                //RenderColorPixels(_colorPixels);
             }
         }
+        
+
+        private async void CoreWindow_KeyUp(CoreWindow sender, KeyEventArgs args)
+        {
+            var key = args.VirtualKey;
+            if (key == VirtualKey.Space)
+            {
+                // Take screenshot when releasing the space key
+                await WriteableBitmapToStorageFile(_bitmap);
+            }
+        }
+
+        private async Task<StorageFile> WriteableBitmapToStorageFile(WriteableBitmap wb)
+        {
+            var fileName = string.Format(DefaultPhotoFileName, DateTime.Now);
+            Guid bitmapEncoderGuid;
+            switch (DefaultPhotoFileFormat)
+            {
+                case FileFormat.Jpeg:
+                    fileName += ".jpeg";
+                    bitmapEncoderGuid = BitmapEncoder.JpegEncoderId;
+                    break;
+
+                case FileFormat.Png:
+                    fileName += ".png";
+                    bitmapEncoderGuid = BitmapEncoder.PngEncoderId;
+                    break;
+
+                case FileFormat.Bmp:
+                    fileName += ".bmp";
+                    bitmapEncoderGuid = BitmapEncoder.BmpEncoderId;
+                    break;
+
+                case FileFormat.Tiff:
+                    fileName += ".tiff";
+                    bitmapEncoderGuid = BitmapEncoder.TiffEncoderId;
+                    break;
+
+                case FileFormat.Gif:
+                    fileName += ".gif";
+                    bitmapEncoderGuid = BitmapEncoder.GifEncoderId;
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(DefaultPhotoFileFormat));
+            }
+
+            var targetFolder = await _defaultPhotoFolder.CreateFolderAsync(DefaultPhotoSubFolder, CreationCollisionOption.OpenIfExists);
+            var file = await targetFolder.CreateFileAsync(fileName, CreationCollisionOption.GenerateUniqueName);
+            using (var stream = await file.OpenAsync(FileAccessMode.ReadWrite))
+            {
+                var encoder = await BitmapEncoder.CreateAsync(bitmapEncoderGuid, stream);
+                var pixelStream = wb.PixelBuffer.AsStream();
+                var pixels = new byte[pixelStream.Length];
+                await pixelStream.ReadAsync(pixels, 0, pixels.Length);
+
+                encoder.SetPixelData(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore, (uint) wb.PixelWidth, (uint) wb.PixelHeight, 96.0, 96.0, pixels);
+                await encoder.FlushAsync();
+            }
+            return file;
+        }
+
 
         /// <summary>
         /// Renders color pixels into the writeableBitmap.
@@ -332,9 +420,11 @@ namespace KissMachineKinect
             _bitmap.Invalidate();
             ColorImg.Source = _bitmap;
         }
+
         #endregion
 
         #region Player Management
+
         private void CreateNewPlayer(ulong trackingId, int bodyNum)
         {
             Debug.WriteLine("Create player: " + bodyNum + " / id: " + trackingId);
@@ -366,8 +456,8 @@ namespace KissMachineKinect
         {
             return _players.Any(curPlayer => curPlayer.TrackingId == trackingId);
         }
-        #endregion
 
+        #endregion
 
         /// <summary>
         /// Handles the body frame data arriving from the sensor
@@ -412,10 +502,7 @@ namespace KissMachineKinect
                 if (minPair.DistanceInM < 4.0f)
                 {
                     // Draw line between heads
-                    _minPlayerLine.SetPosition(minPair.Player1Pos.X,
-                        minPair.Player1Pos.Y,
-                        minPair.Player2Pos.X,
-                        minPair.Player2Pos.Y);
+                    _minPlayerLine.SetPosition(minPair.Player1Pos.X, minPair.Player1Pos.Y, minPair.Player2Pos.X, minPair.Player2Pos.Y);
                     _minPlayerLine.SetVisibility(true);
                 }
                 else
@@ -440,22 +527,22 @@ namespace KissMachineKinect
                     SetCountdown(99);
                 }
             }
-
         }
 
 
         private KissPositionModel CheckPlayersCloseBy()
         {
             // TODO Simulation only
+#if DEBUG
             if (_players.Count < 1) return null;
             if (_players.Count == 1)
             {
                 _players.Add(new PlayerInfo(_drawingCanvas, 1, -1)
                 {
-                    FacePosInCamera = new CameraSpacePoint { X = -0.0366f, Y = -0.0486f, Z = 1.164f },
-                    FacePosInColor = new ColorSpacePoint { X = 972f, Y = 599f }
+                    FacePosInCamera = new CameraSpacePoint {X = -0.0366f, Y = -0.0486f, Z = 1.164f}, FacePosInColor = new ColorSpacePoint {X = 972f, Y = 599f}
                 });
             }
+#endif
 
             // Real code
             if (_players.Count < 2) return null;
@@ -512,15 +599,15 @@ namespace KissMachineKinect
         private void StartKissPhotoTimer()
         {
             if (_photoCountdownTimer != null || _photoTaken) return;
-            PhotoCountDown = 5;
-            _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
+            PhotoCountDown = 4;
+            _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(1.5), TimeSpan.FromSeconds(1.5));
         }
 
-        private void PhotoTimerCallback(object state)
+        private async void PhotoTimerCallback(object state)
         {
             if (PhotoCountDown == 0)
             {
-                // TODO Take picture
+                await WriteableBitmapToStorageFile(_bitmap);
                 StopKissPhotoTimer();
                 _photoTaken = true;
             }
@@ -528,7 +615,6 @@ namespace KissMachineKinect
             {
                 SetCountdown(PhotoCountDown - 1);
             }
-
         }
 
         private void StopKissPhotoTimer()
@@ -544,18 +630,18 @@ namespace KissMachineKinect
             if (PhotoCountDown == newValue) return;
             // Speak the text
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () => 
+            _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 PhotoCountDown = newValue;
                 // Convert countdown value to text
                 var textConverter = new CountdownIntToStringConverter();
-                var speakText = (string)textConverter.Convert(PhotoCountDown, typeof(string), null, Windows.Globalization.Language.CurrentInputMethodLanguageTag);
+                var speakText = (string) textConverter.Convert(PhotoCountDown, typeof(string), null, Windows.Globalization.Language.CurrentInputMethodLanguageTag);
                 await _speechService.SpeakTextAsync(speakText);
             });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
-        #endregion
 
+        #endregion
 
         /// <summary>
         /// Shows a message box containing a specified message and a specified title.
@@ -578,10 +664,8 @@ namespace KissMachineKinect
         {
             bool? result = null;
             var dlg = new MessageDialog(message, title);
-            dlg.Commands.Add(
-               new UICommand("OK", cmd => result = true));
-            dlg.Commands.Add(
-               new UICommand("Cancel", cmd => result = false));
+            dlg.Commands.Add(new UICommand("OK", cmd => result = true));
+            dlg.Commands.Add(new UICommand("Cancel", cmd => result = false));
             dlg.DefaultCommandIndex = 0;
             dlg.CancelCommandIndex = 1;
 
