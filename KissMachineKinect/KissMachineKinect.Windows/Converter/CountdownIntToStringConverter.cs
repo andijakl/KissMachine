@@ -1,6 +1,7 @@
 ﻿using System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Data;
+using KissMachineKinect.Services;
 
 namespace KissMachineKinect.Converter
 {
@@ -9,9 +10,7 @@ namespace KissMachineKinect.Converter
         public object Convert(object value, Type targetType, object parameter, string language)
         {
             if (!(value is int)) return "Fehler";
-            var countdownVal = (int)value;
-            if (countdownVal == 99) return "Gebt euch ein Bussi!";
-            return countdownVal > 0 ? countdownVal.ToString() : "Bussi!";
+            return KissCountdownStatusService.ConvertCodeToText((int) value);
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, string language)

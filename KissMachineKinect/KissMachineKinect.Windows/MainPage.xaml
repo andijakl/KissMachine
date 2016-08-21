@@ -30,6 +30,10 @@
                 <Image Name="ColorImg" Stretch="UniformToFill"/>
             </Grid>
         </Viewbox>
+        
+        <Image Grid.Row="0" Grid.RowSpan="5" Grid.Column="0" 
+               x:Name="TakenPhoto" Stretch="UniformToFill" 
+               Visibility="{Binding ShowTakenPhoto, Converter={StaticResource BoolToVisibilityConverter}}" />
 
         <Rectangle Grid.Row="2" Grid.Column="0" VerticalAlignment="Stretch" 
                    HorizontalAlignment="Stretch" Fill="{StaticResource CustomAccentLightTransparentBrush}"

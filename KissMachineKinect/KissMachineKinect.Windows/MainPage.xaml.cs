@@ -40,6 +40,8 @@ namespace KissMachineKinect
         private const float ShowHintKissDistance = 0.6f;
         private const float TriggerKissCountdownDistance = 0.3f;
 
+        private const double CountdownSpeed = 1.5;
+
         // Screenshots
         private const FileFormat DefaultPhotoFileFormat = FileFormat.Png;
         private const string DefaultPhotoFileName = "kiss_{0:yyyy-MM-dd_HH-mm-ss}";
@@ -69,7 +71,7 @@ namespace KissMachineKinect
         private WriteableBitmap _bitmap;
         private Stream _colorPixelStream;
         private Canvas _drawingCanvas;
-        
+
         // Initialization
         private bool _kinectInitialized;
         private bool _kinectStarted;
@@ -82,11 +84,12 @@ namespace KissMachineKinect
         private MinPlayerLine _minPlayerLine;
         private Timer _photoCountdownTimer;
 
-        private int _photoCountDown = -1;
+        private int _photoCountDown = (int)KissCountdownStatusService.SpecialKissTexts.Invisible;
         public int PhotoCountDown
         {
             get { return _photoCountDown; }
-            set {
+            set
+            {
                 if (value == _photoCountDown) return;
                 _photoCountDown = value;
                 OnPropertyChanged();
@@ -94,6 +97,19 @@ namespace KissMachineKinect
         }
 
         private bool _photoTaken = false;
+
+
+        private bool _showTakenPhoto = false;
+        public bool ShowTakenPhoto
+        {
+            get { return _showTakenPhoto; }
+            set
+            {
+                if (value == _showTakenPhoto) return;
+                _showTakenPhoto = value;
+                OnPropertyChanged();
+            }
+        }
 
         private CoreDispatcher _dispatcher;
         private ResourceLoader _resourceLoader;
@@ -133,12 +149,12 @@ namespace KissMachineKinect
 
         #region Init
 
-        private void MainPage_Loaded(object sender, RoutedEventArgs e)
+        private async void MainPage_Loaded(object sender, RoutedEventArgs e)
         {
             // use the window object as the view model in this simple example
             _dispatcher = CoreWindow.GetForCurrentThread().Dispatcher;
             DataContext = this;
-            _dispatcher.RunAsync(CoreDispatcherPriority.Normal, Init);
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, Init);
         }
 
 
@@ -315,6 +331,8 @@ namespace KissMachineKinect
         #region Color Frames
         private void Reader_ColorFrameArrived(ColorFrameReader sender, ColorFrameArrivedEventArgs args)
         {
+            if (ShowTakenPhoto) return;
+
             var colorFrameProcessed = false;
 
             // ColorFrame is IDisposable
@@ -344,7 +362,7 @@ namespace KissMachineKinect
                 _bitmap.Invalidate();
             }
         }
-        
+
 
         private async void CoreWindow_KeyUp(CoreWindow sender, KeyEventArgs args)
         {
@@ -400,23 +418,10 @@ namespace KissMachineKinect
                 var pixels = new byte[pixelStream.Length];
                 await pixelStream.ReadAsync(pixels, 0, pixels.Length);
 
-                encoder.SetPixelData(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore, (uint) wb.PixelWidth, (uint) wb.PixelHeight, 96.0, 96.0, pixels);
+                encoder.SetPixelData(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Ignore, (uint)wb.PixelWidth, (uint)wb.PixelHeight, 96.0, 96.0, pixels);
                 await encoder.FlushAsync();
             }
             return file;
-        }
-
-
-        /// <summary>
-        /// Renders color pixels into the writeableBitmap.
-        /// </summary>
-        /// <param name="pixels">pixel data</param>
-        private void RenderColorPixels(byte[] pixels)
-        {
-            _colorPixelStream.Seek(0, SeekOrigin.Begin);
-            _colorPixelStream.Write(pixels, 0, pixels.Length);
-            _bitmap.Invalidate();
-            ColorImg.Source = _bitmap;
         }
 
         #endregion
@@ -429,7 +434,7 @@ namespace KissMachineKinect
             _players.Add(new PlayerInfo(_drawingCanvas, trackingId, bodyNum));
         }
 
-        private void RemovePlayer(ulong trackingId, int bodyNum)
+        private async Task RemovePlayer(ulong trackingId, int bodyNum)
         {
             if (_players == null || !_players.Any()) return;
             var playerToRemove = _players.FirstOrDefault(playerInfo => playerInfo.BodyNum == bodyNum);
@@ -441,18 +446,9 @@ namespace KissMachineKinect
                 if (_players.Count < 2)
                 {
                     _photoTaken = false;
-                    StopKissPhotoTimer();
+                    await StopKissPhotoTimer();
                 }
             }
-
-            //for (var i = _players.Count - 1; i >= 0; i--)
-            //{
-            //    if (_players[i].TrackingId != trackingId) continue;
-
-            //    Debug.WriteLine("Remove player: " + trackingId);
-            //    _players[i].RemoveFromWorld(_drawingCanvas);
-            //    _players.RemoveAt(i);
-            //}
         }
 
         private bool IsPlayerTracked(ulong trackingId)
@@ -494,18 +490,25 @@ namespace KissMachineKinect
                 else
                 {
                     // collapse this body from canvas as it goes out of view
-                    RemovePlayer(curBody.TrackingId, i);
+                    await RemovePlayer(curBody.TrackingId, i);
                 }
             }
 
             // Check if two players are close enough
             var minPair = CheckPlayersCloseBy();
+            if (ShowTakenPhoto || _photoTaken)
+            {
+                _minPlayerLine.SetVisibility(false);
+                return;
+            }
+
             if (minPair != null)
             {
                 if (minPair.DistanceInM < ShowHintKissDistance)
                 {
                     // Draw line between heads
-                    _minPlayerLine.SetPosition(minPair.Player1Pos.X, minPair.Player1Pos.Y, minPair.Player2Pos.X, minPair.Player2Pos.Y);
+                    _minPlayerLine.SetPosition(minPair.Player1Pos.X, minPair.Player1Pos.Y, minPair.Player2Pos.X,
+                        minPair.Player2Pos.Y);
                     _minPlayerLine.SetVisibility(true);
                 }
                 else
@@ -530,30 +533,37 @@ namespace KissMachineKinect
                     }
                 }
 
-                if (_photoCountdownTimer == null && 
-                    minPair.DistanceInM < ShowHintKissDistance && 
+                if (_photoCountdownTimer == null &&
+                    minPair.DistanceInM < ShowHintKissDistance &&
                     !_photoTaken)
                 {
                     // Show hint to kiss
-                    SetCountdown(99);
+                    SetCountdown((int) KissCountdownStatusService.SpecialKissTexts.GiveAKiss);
                 }
+            }
+            else
+            {
+                // Remove line if we don't have a pair
+                _minPlayerLine.SetVisibility(false);
             }
         }
 
 
         private KissPositionModel CheckPlayersCloseBy()
         {
+            if (_players == null) return null;
+
             // TODO Simulation only
 #if DEBUG
-            if (_players.Count < 1) return null;
-            if (_players.Count == 1)
-            {
-                _players.Add(new PlayerInfo(_drawingCanvas, 1, -1)
-                {
-                    FacePosInCamera = new CameraSpacePoint { X = -0.0366f, Y = -0.0486f, Z = 1.164f },
-                    FacePosInColor = new ColorSpacePoint { X = 972f, Y = 599f }
-                });
-            }
+            //if (_players.Count < 1) return null;
+            //if (_players.Count == 1)
+            //{
+            //    _players.Add(new PlayerInfo(_drawingCanvas, 1, -1)
+            //    {
+            //        FacePosInCamera = new CameraSpacePoint { X = -0.0366f, Y = -0.0486f, Z = 1.164f },
+            //        FacePosInColor = new ColorSpacePoint { X = 972f, Y = 599f }
+            //    });
+            //}
 #endif
 
             // Real code
@@ -599,7 +609,7 @@ namespace KissMachineKinect
             }
             else
             {
-                player.SetVisibility(true);
+                player.SetVisibility(!(_photoTaken || ShowTakenPhoto));
                 var facePosInCamera = faceJoint.Position;
                 var facePosInColor = _coordinateMapper.MapCameraPointToColorSpace(facePosInCamera);
                 player.SetPosition(facePosInCamera, facePosInColor);
@@ -611,38 +621,82 @@ namespace KissMachineKinect
         private void StartKissPhotoTimer()
         {
             if (_photoCountdownTimer != null || _photoTaken) return;
-            PhotoCountDown = 4;
-            _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(1.5), TimeSpan.FromSeconds(1.5));
+            PhotoCountDown = 5;
+            _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(CountdownSpeed), TimeSpan.FromSeconds(CountdownSpeed));
         }
+
 
         private async void PhotoTimerCallback(object state)
         {
-            if (PhotoCountDown > 0)
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                SetCountdown(PhotoCountDown - 1);
-            }
-            if (PhotoCountDown == 0)
-            {
-                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+                if (PhotoCountDown == (int)KissCountdownStatusService.SpecialKissTexts.PhotoTaken)
                 {
+                    // Clear taken picture from screen
+                    ShowTakenPhoto = false;
+                    var stopTimer = true;
+                    // Are people still standing together?
+                    var minPair = CheckPlayersCloseBy();
+                    if (minPair?.DistanceInM < ShowHintKissDistance)
+                    {
+                        // Don't stop timer yet
+                        SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.AnotherPhoto);
+                        stopTimer = false;
+                    }
+                    if (stopTimer)
+                    {
+                        // People are not standing together anymore - we can stop the timer and hide the text
+                        await StopKissPhotoTimer();
+                        _photoTaken = false;
+                    }
+                    return;
+                }
+                if (PhotoCountDown == (int) KissCountdownStatusService.SpecialKissTexts.AnotherPhoto)
+                {
+                    // Additional time has passed - disable the lock so that another photo can be taken!
                     await StopKissPhotoTimer();
-                    await SavePhotoToFile(_bitmap);
+                    _photoTaken = false;
+                    return;
+                }
+                if (PhotoCountDown == (int) KissCountdownStatusService.SpecialKissTexts.Kiss)
+                {
+                    // Stop kiss countdown timer
+                    await StopKissPhotoTimer(false);
+                    // Set countdown timer to clear picture from screen after 10 seconds
+                    SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.PhotoTaken);
+                    _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
+                }
+                if (PhotoCountDown == 1)
+                {
+                    SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.Kiss);
+                    // Keep current picture on the screen
+                    ShowTakenPhoto = true;
+                    // Don't take another picture until a longer time has passed or people are gone
                     _photoTaken = true;
-                });
-            }
+                    // Save photo to file
+                    await SavePhotoToFile(_bitmap);
+                }
+                if (PhotoCountDown > 1)
+                {
+                    SetCountdown(PhotoCountDown - 1);
+                }
+            });
         }
 
-        private async Task StopKissPhotoTimer()
+        private async Task StopKissPhotoTimer(bool setToInvisible = true)
         {
             if (_photoCountdownTimer == null) return;
             Debug.WriteLine("Stopping kiss timer");
             _photoCountdownTimer.Dispose();
             _photoCountdownTimer = null;
-            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+            if (setToInvisible)
             {
-                // Set to invisible
-                SetCountdown(-1);
-            });
+                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+                {
+                    // Set to invisible
+                    SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.Invisible);
+                });
+            }
         }
 
         private void SetCountdown(int newValue)
@@ -652,11 +706,12 @@ namespace KissMachineKinect
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
+                Debug.WriteLine("Set countdown to: " + newValue);
                 PhotoCountDown = newValue;
-                if (PhotoCountDown == -1) return;
+                if (PhotoCountDown == (int)KissCountdownStatusService.SpecialKissTexts.Invisible) return;
                 // Convert countdown value to text
                 var textConverter = new CountdownIntToStringConverter();
-                var speakText = (string) textConverter.Convert(PhotoCountDown, typeof(string), null, Windows.Globalization.Language.CurrentInputMethodLanguageTag);
+                var speakText = (string)textConverter.Convert(PhotoCountDown, typeof(string), null, Windows.Globalization.Language.CurrentInputMethodLanguageTag);
                 await _speechService.SpeakTextAsync(speakText);
             });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
@@ -664,6 +719,7 @@ namespace KissMachineKinect
 
         #endregion
 
+        #region UI Dialogs
         /// <summary>
         /// Shows a message box containing a specified message and a specified title.
         /// </summary>
@@ -694,6 +750,8 @@ namespace KissMachineKinect
             return result != null && result == true;
         }
 
+        #endregion
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         [NotifyPropertyChangedInvocator]
@@ -702,21 +760,5 @@ namespace KissMachineKinect
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        private void HeartBackground_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            TextBlock contentTextBlock = sender as TextBlock;
-            if (contentTextBlock != null)
-            {
-                double height = contentTextBlock.Height;
-                if (contentTextBlock.ActualHeight > height)
-                {
-                    // Get the ratio of the TextBlock's height to that of the TextBox’s 
-                    double fontsizeMultiplier = Math.Sqrt(height / contentTextBlock.ActualHeight);
-
-                    // Set the new FontSize 
-                    contentTextBlock.FontSize = Math.Floor(contentTextBlock.FontSize * fontsizeMultiplier);
-                }
-            }
-        }
     }
 }
