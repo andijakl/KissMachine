@@ -61,7 +61,8 @@
 
         <!-- Debug only: distance information -->
         <TextBlock x:Name="DistTxt" 
-                           Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="36"/>
+                   Grid.Row="0" HorizontalAlignment="Left" VerticalAlignment="Top" FontSize="36"
+                   Visibility="Collapsed"/>
 
         <!-- Busy Indicator -->
         <controls:BusyControl Grid.Row="0" Grid.RowSpan="5"

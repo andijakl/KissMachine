@@ -119,6 +119,7 @@ namespace KissMachineKinect
         #region Busy Control
 
         private BusyStatus _busyStatus;
+        private DispatcherTimer _kinectInitWaitTimer;
 
         /// <summary>
         /// Full-screen busy indicator that blocks the rest of the UI.
@@ -142,6 +143,11 @@ namespace KissMachineKinect
         public MainPage()
         {
             InitializeComponent();
+
+#if DEBUG
+            DistTxt.Visibility = Visibility.Visible;
+#endif
+
             Loaded += MainPage_Loaded;
             Window.Current.CoreWindow.KeyUp += CoreWindow_KeyUp;
         }
@@ -302,30 +308,65 @@ namespace KissMachineKinect
             // open the sensor
             _sensor.Open();
 
-            // TODO show on UI that we're waiting for the kinect
-
+            // Show on UI that we're waiting for the kinect
+            BusyStatus.SetBusy(_resourceLoader.GetString("BusyInitializingKinect"));
         }
 
         private async void Kinect_IsAvailableChanged(KinectSensor sender, IsAvailableChangedEventArgs args)
         {
             if (args.IsAvailable && !_kinectStarted && _kinectInitialized)
             {
+                _kinectInitWaitTimer?.Stop();
+                _kinectInitWaitTimer = null;
                 _kinectStarted = true;
                 BusyStatus.EndBusy(BusyStatus.BusyEndTypes.Fadeout);
                 await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, InitGame);
+                return;
+            }
 
+            if (!_kinectStarted && !args.IsAvailable)
+            {
+                if (_kinectInitWaitTimer != null && _kinectInitWaitTimer.IsEnabled)
+                {
+                    // Wait timer is already running - do nothing
+                    return;
+                }
+                // If no Kinect is available, we'll only get one unavailable callback
+                // Wait for a few seconds, then show error info
+                _kinectInitWaitTimer = new DispatcherTimer();
+                _kinectInitWaitTimer.Tick += KinectInitWaitTimerOnTick;
+                _kinectInitWaitTimer.Interval = TimeSpan.FromSeconds(5);
+                _kinectInitWaitTimer.Start();
+                return;
             }
 
             if (_kinectStarted && !args.IsAvailable && _kinectInitialized)
             {
-                // Kinect was already initialized but then later the status changed to not available
-                await ShowMessageBoxAsync(_resourceLoader.GetString("ErrorNoKinectAvailableText"),
-                    _resourceLoader.GetString("ErrorNoKinectAvailableTitle"));
-                BusyStatus.EndBusy(BusyStatus.BusyEndTypes.Error);
-                //MainViewbox.Visibility = Visibility.Collapsed;
-                _kinectStarted = false;
+                // Kinect was already running, but is no longer available
+                await ShowNoKinectAvailableMessageAsync();
             }
+
+
         }
+
+        private async void KinectInitWaitTimerOnTick(object sender, object o)
+        {
+            // Only do one callback
+            _kinectInitWaitTimer?.Stop();
+            _kinectInitWaitTimer = null;
+            await ShowNoKinectAvailableMessageAsync();
+        }
+
+        private async Task ShowNoKinectAvailableMessageAsync()
+        {
+            // Kinect was already initialized but then later the status changed to not available
+            await ShowMessageBoxAsync(_resourceLoader.GetString("ErrorNoKinectAvailableText"),
+                _resourceLoader.GetString("ErrorNoKinectAvailableTitle"));
+            BusyStatus.EndBusy(BusyStatus.BusyEndTypes.Error);
+            //MainViewbox.Visibility = Visibility.Collapsed;
+            _kinectStarted = false;
+        }
+
         #endregion
 
         #region Color Frames
@@ -371,6 +412,12 @@ namespace KissMachineKinect
             {
                 // Take screenshot when releasing the space key
                 await SavePhotoToFile(_bitmap);
+            } else if (key == VirtualKey.D)
+            {
+                // Disable / Enable debug mode
+                DistTxt.Visibility = DistTxt.Visibility == Visibility.Visible
+                    ? Visibility.Collapsed
+                    : Visibility.Visible;
             }
         }
 
@@ -389,24 +436,6 @@ namespace KissMachineKinect
                     fileName += ".png";
                     bitmapEncoderGuid = BitmapEncoder.PngEncoderId;
                     break;
-
-                case FileFormat.Bmp:
-                    fileName += ".bmp";
-                    bitmapEncoderGuid = BitmapEncoder.BmpEncoderId;
-                    break;
-
-                case FileFormat.Tiff:
-                    fileName += ".tiff";
-                    bitmapEncoderGuid = BitmapEncoder.TiffEncoderId;
-                    break;
-
-                case FileFormat.Gif:
-                    fileName += ".gif";
-                    bitmapEncoderGuid = BitmapEncoder.GifEncoderId;
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(DefaultPhotoFileFormat));
             }
 
             var targetFolder = await _defaultPhotoFolder.CreateFolderAsync(DefaultPhotoSubFolder, CreationCollisionOption.OpenIfExists);
@@ -544,7 +573,7 @@ namespace KissMachineKinect
             else
             {
                 // Remove line if we don't have a pair
-                _minPlayerLine.SetVisibility(false);
+                _minPlayerLine?.SetVisibility(false);
             }
         }
 
@@ -555,15 +584,15 @@ namespace KissMachineKinect
 
             // TODO Simulation only
 #if DEBUG
-            //if (_players.Count < 1) return null;
-            //if (_players.Count == 1)
-            //{
-            //    _players.Add(new PlayerInfo(_drawingCanvas, 1, -1)
-            //    {
-            //        FacePosInCamera = new CameraSpacePoint { X = -0.0366f, Y = -0.0486f, Z = 1.164f },
-            //        FacePosInColor = new ColorSpacePoint { X = 972f, Y = 599f }
-            //    });
-            //}
+            if (_players.Count < 1) return null;
+            if (_players.Count == 1)
+            {
+                _players.Add(new PlayerInfo(_drawingCanvas, 1, -1)
+                {
+                    FacePosInCamera = new CameraSpacePoint { X = -0.0366f, Y = -0.0486f, Z = 1.164f },
+                    FacePosInColor = new ColorSpacePoint { X = 972f, Y = 599f }
+                });
+            }
 #endif
 
             // Real code
@@ -571,6 +600,7 @@ namespace KissMachineKinect
 
             // Iterate over all players
             var minPair = new KissPositionModel();
+            var foundMinPairDistance = false;
 
             for (var i = 0; i < _players.Count - 1; i++)
             {
@@ -581,13 +611,18 @@ namespace KissMachineKinect
                     var dist = (p1Pos - p2Pos).Length;
                     if (dist < minPair.DistanceInM)
                     {
+                        foundMinPairDistance = true;
                         minPair.DistanceInM = dist;
                         minPair.Player1Pos = _players[i].FacePosInColor;
                         minPair.Player2Pos = _players[j].FacePosInColor;
                     }
                 }
             }
-            DistTxt.Text = "Minimum distance [m]: " + minPair.DistanceInM;
+            if (DistTxt.Visibility == Visibility.Visible && foundMinPairDistance)
+            {
+                DistTxt.Text = string.Format(_resourceLoader.GetString("MinDistanceText"), minPair.DistanceInM);
+            }
+
             return minPair;
         }
 

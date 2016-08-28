@@ -135,4 +135,13 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+
+    <!-- Global Overrides -->
+    <SolidColorBrush x:Key="ProgressBarIndeterminateForegroundThemeBrush" Color="{StaticResource CustomAccentColor}" />
+    <!--<ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Default">
+            <x:String x:Key="ProgressBarIndeterminateForegroundThemeBrush">Aquamarine</x:String>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>-->
 </ResourceDictionary>
