@@ -23,6 +23,7 @@ namespace KissMachineKinect.Services
                 // Select German voice if available
                 if (curVoice.Language.Contains("de"))
                 {
+                    Debug.WriteLine("Found German voice");
                     _synthesizer.Voice = curVoice;
                     break;
                 }

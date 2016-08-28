@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -13,7 +12,6 @@ using Windows.ApplicationModel.Resources;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
-using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
@@ -51,10 +49,7 @@ namespace KissMachineKinect
         private enum FileFormat
         {
             Jpeg,
-            Png,
-            Bmp,
-            Tiff,
-            Gif
+            Png
         }
 
         // Kinect
@@ -66,10 +61,7 @@ namespace KissMachineKinect
         private int _maxBodyCount;
         private Body[] _bodies;
         private ColorFrameReader _colorFrameReader;
-        private uint _bytesPerPixel;
-        private byte[] _colorPixels;
         private WriteableBitmap _bitmap;
-        private Stream _colorPixelStream;
         private Canvas _drawingCanvas;
 
         // Initialization
@@ -96,10 +88,10 @@ namespace KissMachineKinect
             }
         }
 
-        private bool _photoTaken = false;
+        private bool _photoTaken;
 
 
-        private bool _showTakenPhoto = false;
+        private bool _showTakenPhoto;
         public bool ShowTakenPhoto
         {
             get { return _showTakenPhoto; }
@@ -252,22 +244,13 @@ namespace KissMachineKinect
 
             // create the colorFrameDescription from the ColorFrameSource using rgba format
             var colorFrameDescription = _sensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Rgba);
-
-            // rgba is 4 bytes per pixel
-            _bytesPerPixel = colorFrameDescription.BytesPerPixel;
-
-            // allocate space to put the pixels to be rendered
-            _colorPixels = new byte[colorFrameDescription.Width * colorFrameDescription.Height * _bytesPerPixel];
-
+            
             // create the bitmap to display
             _bitmap = new WriteableBitmap(colorFrameDescription.Width, colorFrameDescription.Height);
 
             ColorImg.Width = colorFrameDescription.Width;
             ColorImg.Height = colorFrameDescription.Height;
-
-            // get the pixelStream for the writeableBitmap
-            _colorPixelStream = _bitmap.PixelBuffer.AsStream();
-
+            
             // get the color frame details
             var frameDescription = _sensor.ColorFrameSource.FrameDescription;
 
@@ -420,7 +403,32 @@ namespace KissMachineKinect
                         ? Visibility.Collapsed
                         : Visibility.Visible;
                     break;
+                case VirtualKey.R:
+                    // Reset all players
+                    await ResetAllPlayersAsync();
+                    break;
+                case VirtualKey.A:
+                    {
+#if DEBUG
+                        // Add new player (for debug)
+                        var newPlayer = new PlayerInfo(_drawingCanvas, 1, -1)
+                        {
+                            FacePosInCamera = new CameraSpacePoint { X = -0.0366f, Y = -0.0486f, Z = 1.164f },
+                            FacePosInColor = new ColorSpacePoint { X = 972f, Y = 599f }
+                        };
+                        newPlayer.SetVisibility(true);
+                        _players.Add(newPlayer);
+#endif
+                    }
+                    break;
             }
+        }
+
+        private async Task ResetAllPlayersAsync()
+        {
+            _players?.Clear();
+            _minPlayerLine?.SetVisibility(false);
+            await StopKissPhotoTimer();
         }
 
         private async Task<StorageFile> SavePhotoToFile(WriteableBitmap wb)
@@ -570,7 +578,7 @@ namespace KissMachineKinect
                     !_photoTaken)
                 {
                     // Show hint to kiss
-                    SetCountdown((int) KissCountdownStatusService.SpecialKissTexts.GiveAKiss);
+                    SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.GiveAKiss);
                 }
             }
             else
@@ -584,19 +592,6 @@ namespace KissMachineKinect
         private KissPositionModel CheckPlayersCloseBy()
         {
             if (_players == null) return null;
-
-            // TODO Simulation only
-#if DEBUG
-            if (_players.Count < 1) return null;
-            if (_players.Count == 1)
-            {
-                _players.Add(new PlayerInfo(_drawingCanvas, 1, -1)
-                {
-                    FacePosInCamera = new CameraSpacePoint { X = -0.0366f, Y = -0.0486f, Z = 1.164f },
-                    FacePosInColor = new ColorSpacePoint { X = 972f, Y = 599f }
-                });
-            }
-#endif
 
             // Real code
             if (_players.Count < 2) return null;
@@ -641,7 +636,7 @@ namespace KissMachineKinect
             if (player == null) return;
 
             var faceJoint = curBody.Joints[JointType.Head];
-            if (faceJoint.TrackingState == TrackingState.NotTracked)
+            if (faceJoint.TrackingState == TrackingState.NotTracked && player.BodyNum >= 0)
             {
                 player.SetVisibility(false);
             }
@@ -689,14 +684,14 @@ namespace KissMachineKinect
                     }
                     return;
                 }
-                if (PhotoCountDown == (int) KissCountdownStatusService.SpecialKissTexts.AnotherPhoto)
+                if (PhotoCountDown == (int)KissCountdownStatusService.SpecialKissTexts.AnotherPhoto)
                 {
                     // Additional time has passed - disable the lock so that another photo can be taken!
                     await StopKissPhotoTimer();
                     _photoTaken = false;
                     return;
                 }
-                if (PhotoCountDown == (int) KissCountdownStatusService.SpecialKissTexts.Kiss)
+                if (PhotoCountDown == (int)KissCountdownStatusService.SpecialKissTexts.Kiss)
                 {
                     // Stop kiss countdown timer
                     await StopKissPhotoTimer(false);
