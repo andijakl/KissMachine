@@ -23,6 +23,11 @@ namespace KissMachineKinect
         {
             this.InitializeComponent();
             this.Suspending += this.OnSuspending;
+
+            var culture = new System.Globalization.CultureInfo("de-AT");
+            Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = culture.Name;
+            System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
+            System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
         }
 
         /// <summary>

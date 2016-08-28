@@ -118,30 +118,30 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="AnotherPhoto" xml:space="preserve">
-    <value>Ah, you'd like to take another photo? Please wait a little ...</value>
+    <value>Ah, ihr wollt also noch ein Foto machen? Dann bleibt bitte noch kurz stehen...</value>
   </data>
   <data name="BusyInitializingKinect" xml:space="preserve">
-    <value>Initializing Kinect Sensor ...</value>
+    <value>Initialisiere Kinect Sensor ...</value>
   </data>
   <data name="BusyLoading" xml:space="preserve">
-    <value>Loading ...</value>
+    <value>Lade ...</value>
   </data>
   <data name="ErrorNoKinectAvailableText" xml:space="preserve">
-    <value>No Kinect v2 sensor is available on your system. Make sure the Kinect is connected, powered up and the drivers are installed.</value>
+    <value>Konnte keinen Kinect v2 Sensor finden. Stelle sicher, dass die Kinect an den PC angesteckt, mit Strom versorgt ist und dass die Treiber installiert sind (inkl. einem laufenden KinectMonitor-Service).</value>
   </data>
   <data name="ErrorNoKinectAvailableTitle" xml:space="preserve">
-    <value>Kinect not found</value>
+    <value>Kinect nicht gefunden</value>
   </data>
   <data name="GiveAKiss" xml:space="preserve">
-    <value>Give a kiss!</value>
+    <value>Gebt euch ein Bussi!</value>
   </data>
   <data name="Kiss" xml:space="preserve">
-    <value>Kiss!</value>
+    <value>Bussi!</value>
   </data>
   <data name="KissThankYou" xml:space="preserve">
-    <value>Thank you! I hope you will like the photo!</value>
+    <value>Dankeschön! Ich hoffe, das Foto gefällt euch!</value>
   </data>
   <data name="MinDistanceText" xml:space="preserve">
-    <value>Minimum distance [m]: {0}</value>
+    <value>Minimale Distanz [m]: {0}</value>
   </data>
 </root>

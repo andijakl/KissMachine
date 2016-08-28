@@ -166,7 +166,6 @@ namespace KissMachineKinect
 
         private void Init()
         {
-            // TODO check if Kinect is available, show message and stop game otherwise
             _resourceLoader = ResourceLoader.GetForCurrentView();
             BusyStatus.SetBusy(_resourceLoader.GetString("BusyLoading"));
             InitKinect();
@@ -408,16 +407,19 @@ namespace KissMachineKinect
         private async void CoreWindow_KeyUp(CoreWindow sender, KeyEventArgs args)
         {
             var key = args.VirtualKey;
-            if (key == VirtualKey.Space)
+            // ReSharper disable once SwitchStatementMissingSomeCases
+            switch (key)
             {
-                // Take screenshot when releasing the space key
-                await SavePhotoToFile(_bitmap);
-            } else if (key == VirtualKey.D)
-            {
-                // Disable / Enable debug mode
-                DistTxt.Visibility = DistTxt.Visibility == Visibility.Visible
-                    ? Visibility.Collapsed
-                    : Visibility.Visible;
+                case VirtualKey.Space:
+                    // Take screenshot when releasing the space key
+                    await SavePhotoToFile(_bitmap);
+                    break;
+                case VirtualKey.D:
+                    // Disable / Enable debug mode
+                    DistTxt.Visibility = DistTxt.Visibility == Visibility.Visible
+                        ? Visibility.Collapsed
+                        : Visibility.Visible;
+                    break;
             }
         }
 
@@ -425,6 +427,7 @@ namespace KissMachineKinect
         {
             var fileName = string.Format(DefaultPhotoFileName, DateTime.Now);
             Guid bitmapEncoderGuid;
+            // ReSharper disable once SwitchStatementMissingSomeCases
             switch (DefaultPhotoFileFormat)
             {
                 case FileFormat.Jpeg:

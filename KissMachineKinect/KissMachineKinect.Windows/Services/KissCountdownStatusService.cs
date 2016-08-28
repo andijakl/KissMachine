@@ -1,4 +1,6 @@
-﻿namespace KissMachineKinect.Services
+﻿using Windows.ApplicationModel.Resources;
+
+namespace KissMachineKinect.Services
 {
     public class KissCountdownStatusService
     {
@@ -13,16 +15,17 @@
 
         public static string ConvertCodeToText(int countdownVal)
         {
+            var resourceLoader = ResourceLoader.GetForCurrentView();
             switch (countdownVal)
             {
                 case (int)SpecialKissTexts.GiveAKiss:
-                    return "Gebt euch ein Bussi!";
+                    return resourceLoader.GetString("GiveAKiss");
                 case (int)SpecialKissTexts.PhotoTaken:
-                    return "Dankeschön! Ich hoffe, das Foto gefällt euch!";
+                    return resourceLoader.GetString("KissThankYou");
                 case (int)SpecialKissTexts.AnotherPhoto:
-                    return "Ah, ihr wollt also noch ein Foto machen? Dann bleibt bitte noch kurz stehen...";
+                    return resourceLoader.GetString("AnotherPhoto");
             }
-            return countdownVal > 0 ? countdownVal.ToString() : "Bussi!";
+            return countdownVal > 0 ? countdownVal.ToString() : resourceLoader.GetString("Kiss"); ;
         }
     }
 }

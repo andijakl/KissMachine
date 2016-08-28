@@ -152,6 +152,7 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <None Include="KissMachineKinect.Windows_TemporaryKey.pfx" />
+    <PRIResource Include="Strings\de\Resources.resw" />
     <PRIResource Include="Strings\en\Resources.resw" />
   </ItemGroup>
   <ItemGroup>
