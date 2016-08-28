@@ -35,10 +35,12 @@ namespace KissMachineKinect
     public sealed partial class MainPage : Page, INotifyPropertyChanged
     {
         // Distance config
-        private const float ShowHintKissDistance = 0.6f;
-        private const float TriggerKissCountdownDistance = 0.3f;
+        private const float ShowHintKissDistanceInM = 0.6f;
+        private const float TriggerKissCountdownDistanceInM = 0.3f;
 
-        private const double CountdownSpeed = 1.5;
+        private const double CountdownSpeedInS = 1.5;
+        private const int CountdownStartValue = 5;
+        private const int ClearPictureSpeedInS = 10;
 
         // Screenshots
         private const FileFormat DefaultPhotoFileFormat = FileFormat.Png;
@@ -84,6 +86,18 @@ namespace KissMachineKinect
             {
                 if (value == _photoCountDown) return;
                 _photoCountDown = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private string _photoCountDownText = string.Empty;
+        public string PhotoCountDownText
+        {
+            get { return _photoCountDownText; }
+            set
+            {
+                if (value == _photoCountDownText) return;
+                _photoCountDownText = value;
                 OnPropertyChanged();
             }
         }
@@ -426,7 +440,11 @@ namespace KissMachineKinect
 
         private async Task ResetAllPlayersAsync()
         {
-            _players?.Clear();
+            for (var i = _players.Count - 1; i >= 0; i--)
+            {
+                var curPlayer = _players[i];
+                DoRemovePlayer(curPlayer);
+            }
             _minPlayerLine?.SetVisibility(false);
             await StopKissPhotoTimer();
         }
@@ -481,14 +499,19 @@ namespace KissMachineKinect
             if (playerToRemove != null)
             {
                 Debug.WriteLine("Remove player: " + bodyNum + " / id: " + trackingId);
-                playerToRemove.RemoveFromWorld(_drawingCanvas);
-                _players.Remove(playerToRemove);
+                DoRemovePlayer(playerToRemove);
                 if (_players.Count < 2)
                 {
                     _photoTaken = false;
                     await StopKissPhotoTimer();
                 }
             }
+        }
+
+        private void DoRemovePlayer(PlayerInfo playerToRemove)
+        {
+            playerToRemove.RemoveFromWorld(_drawingCanvas);
+            _players.Remove(playerToRemove);
         }
 
         private bool IsPlayerTracked(ulong trackingId)
@@ -535,16 +558,16 @@ namespace KissMachineKinect
             }
 
             // Check if two players are close enough
-            var minPair = CheckPlayersCloseBy();
             if (ShowTakenPhoto || _photoTaken)
             {
                 _minPlayerLine.SetVisibility(false);
                 return;
             }
 
+            var minPair = CheckPlayersCloseBy();
             if (minPair != null)
             {
-                if (minPair.DistanceInM < ShowHintKissDistance)
+                if (minPair.DistanceInM < ShowHintKissDistanceInM)
                 {
                     // Draw line between heads
                     _minPlayerLine.SetPosition(minPair.Player1Pos.X, minPair.Player1Pos.Y, minPair.Player2Pos.X,
@@ -553,11 +576,12 @@ namespace KissMachineKinect
                 }
                 else
                 {
+                    // Players are too far apart
                     _minPlayerLine.SetVisibility(false);
                 }
 
                 // Trigger or stop photo?
-                if (minPair.DistanceInM < TriggerKissCountdownDistance && !_photoTaken)
+                if (minPair.DistanceInM < TriggerKissCountdownDistanceInM && !_photoTaken)
                 {
                     // Start kiss timer?
                     StartKissPhotoTimer();
@@ -567,14 +591,14 @@ namespace KissMachineKinect
                     // Stop timer if it was running and reset if a photo was already taken
                     // (people have to get away from each other to start another photo)
                     await StopKissPhotoTimer();
-                    if (minPair.DistanceInM > ShowHintKissDistance)
+                    if (minPair.DistanceInM > ShowHintKissDistanceInM)
                     {
                         _photoTaken = false;
                     }
                 }
 
                 if (_photoCountdownTimer == null &&
-                    minPair.DistanceInM < ShowHintKissDistance &&
+                    minPair.DistanceInM < ShowHintKissDistanceInM &&
                     !_photoTaken)
                 {
                     // Show hint to kiss
@@ -635,8 +659,11 @@ namespace KissMachineKinect
             var player = _players.FirstOrDefault(playerInfo => playerInfo.TrackingId == curBody.TrackingId);
             if (player == null) return;
 
+            // Only do the processing for real players, not for simulated ones
+
             var faceJoint = curBody.Joints[JointType.Head];
-            if (faceJoint.TrackingState == TrackingState.NotTracked && player.BodyNum >= 0)
+            if (player.BodyNum < 0) return;
+            if (faceJoint.TrackingState == TrackingState.NotTracked)
             {
                 player.SetVisibility(false);
             }
@@ -654,8 +681,8 @@ namespace KissMachineKinect
         private void StartKissPhotoTimer()
         {
             if (_photoCountdownTimer != null || _photoTaken) return;
-            PhotoCountDown = 5;
-            _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(CountdownSpeed), TimeSpan.FromSeconds(CountdownSpeed));
+            SetCountdown(CountdownStartValue);
+            _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(CountdownSpeedInS), TimeSpan.FromSeconds(CountdownSpeedInS));
         }
 
 
@@ -670,7 +697,7 @@ namespace KissMachineKinect
                     var stopTimer = true;
                     // Are people still standing together?
                     var minPair = CheckPlayersCloseBy();
-                    if (minPair?.DistanceInM < ShowHintKissDistance)
+                    if (minPair?.DistanceInM < ShowHintKissDistanceInM)
                     {
                         // Don't stop timer yet
                         SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.AnotherPhoto);
@@ -697,7 +724,7 @@ namespace KissMachineKinect
                     await StopKissPhotoTimer(false);
                     // Set countdown timer to clear picture from screen after 10 seconds
                     SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.PhotoTaken);
-                    _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(10));
+                    _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(ClearPictureSpeedInS), TimeSpan.FromSeconds(ClearPictureSpeedInS));
                 }
                 if (PhotoCountDown == 1)
                 {
@@ -744,8 +771,8 @@ namespace KissMachineKinect
                 if (PhotoCountDown == (int)KissCountdownStatusService.SpecialKissTexts.Invisible) return;
                 // Convert countdown value to text
                 var textConverter = new CountdownIntToStringConverter();
-                var speakText = (string)textConverter.Convert(PhotoCountDown, typeof(string), null, Windows.Globalization.Language.CurrentInputMethodLanguageTag);
-                await _speechService.SpeakTextAsync(speakText);
+                PhotoCountDownText = (string)textConverter.Convert(PhotoCountDown, typeof(string), null, Windows.Globalization.Language.CurrentInputMethodLanguageTag);
+                await _speechService.SpeakTextAsync(PhotoCountDownText);
             });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }

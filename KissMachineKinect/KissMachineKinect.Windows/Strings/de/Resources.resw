@@ -117,8 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="AnotherPhoto" xml:space="preserve">
+  <data name="AnotherPhoto_00" xml:space="preserve">
     <value>Ah, ihr wollt also noch ein Foto machen? Dann bleibt bitte noch kurz stehen...</value>
+  </data>
+  <data name="AnotherPhoto_01" xml:space="preserve">
+    <value>Bereit für's nächste Foto? Wartet bitte kurz!</value>
+  </data>
+  <data name="AnotherPhoto_02" xml:space="preserve">
+    <value>Ich finde, dass ihr das noch besser könnt. Versucht es nochmal!</value>
+  </data>
+  <data name="AnotherPhoto_03" xml:space="preserve">
+    <value>Einmal geht's noch, einmal geht's noch leicht! Nächster Versuch!</value>
   </data>
   <data name="BusyInitializingKinect" xml:space="preserve">
     <value>Initialisiere Kinect Sensor ...</value>
@@ -132,16 +141,58 @@
   <data name="ErrorNoKinectAvailableTitle" xml:space="preserve">
     <value>Kinect nicht gefunden</value>
   </data>
-  <data name="GiveAKiss" xml:space="preserve">
+  <data name="GiveAKiss_00" xml:space="preserve">
     <value>Gebt euch ein Bussi!</value>
   </data>
-  <data name="Kiss" xml:space="preserve">
-    <value>Bussi!</value>
+  <data name="GiveAKiss_01" xml:space="preserve">
+    <value>Küsst euch!</value>
   </data>
-  <data name="KissThankYou" xml:space="preserve">
+  <data name="GiveAKiss_02" xml:space="preserve">
+    <value>Knutschen!</value>
+  </data>
+  <data name="GiveAKiss_03" xml:space="preserve">
+    <value>Gebt's euch a Bussal!</value>
+  </data>
+  <data name="GiveAKiss_04" xml:space="preserve">
+    <value>Wie wär's mit einem Bussi?</value>
+  </data>
+  <data name="GiveAKiss_05" xml:space="preserve">
+    <value>Ich will einen Schmatzer sehen!</value>
+  </data>
+  <data name="KissThankYou_00" xml:space="preserve">
     <value>Dankeschön! Ich hoffe, das Foto gefällt euch!</value>
   </data>
+  <data name="KissThankYou_01" xml:space="preserve">
+    <value>Ah - das ist wahre Liebe! Gefällt euch das Foto?</value>
+  </data>
+  <data name="KissThankYou_02" xml:space="preserve">
+    <value>A schöns Bussal! Was sagt's zum Foto?</value>
+  </data>
+  <data name="KissThankYou_03" xml:space="preserve">
+    <value>Wie war das Bussi? Das Foto ist auf jeden Fall super!</value>
+  </data>
+  <data name="KissThankYou_04" xml:space="preserve">
+    <value>Ihr habt die Bussimaschine zum Glühen gebracht! Hier euer Foto!</value>
+  </data>
+  <data name="KissThankYou_05" xml:space="preserve">
+    <value>Na, das geht besser. Findet ihr nicht? Hier das Foto!</value>
+  </data>
+  <data name="KissThankYou_06" xml:space="preserve">
+    <value>Da muss mehr Leidenschaft rein - schaut selbst!</value>
+  </data>
+  <data name="Kiss_00" xml:space="preserve">
+    <value>Bussi!</value>
+  </data>
+  <data name="Kiss_01" xml:space="preserve">
+    <value>Kuss!</value>
+  </data>
+  <data name="Kiss_02" xml:space="preserve">
+    <value>Schmatzer!</value>
+  </data>
+  <data name="Kiss_03" xml:space="preserve">
+    <value>Bussal!</value>
+  </data>
   <data name="MinDistanceText" xml:space="preserve">
-    <value>Minimale Distanz [m]: {0}</value>
+    <value>Minimale Distanz [m]: {0:0.00}</value>
   </data>
 </root>

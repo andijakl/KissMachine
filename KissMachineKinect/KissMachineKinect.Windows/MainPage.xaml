@@ -53,8 +53,9 @@
                            TextAlignment="Center"
                            FontSize="80" FontFamily="Gabriola" 
                            TextLineBounds="Tight" 
-                           Text="{Binding PhotoCountDown, Converter={StaticResource CountdownIntToStringConverter}}"
-                           Visibility="{Binding PhotoCountDown, Converter={StaticResource IntToVisibilityConverter}}" 
+                           TextWrapping="Wrap"
+                           Text="{Binding PhotoCountDownText, Mode=OneWay}"
+                           Visibility="{Binding PhotoCountDown, Converter={StaticResource IntToVisibilityConverter}, Mode=OneWay}" 
                            Foreground="White">
             Text
         </TextBlock>
