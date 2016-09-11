@@ -34,6 +34,9 @@ namespace KissMachineKinect
     /// </summary>
     public sealed partial class MainPage : Page, INotifyPropertyChanged
     {
+        // General config
+        private const bool LowPerformanceMode = true;
+
         // Distance config
         private const float ShowHintKissDistanceInM = 0.6f;
         private const float TriggerKissCountdownDistanceInM = 0.3f;
@@ -77,6 +80,7 @@ namespace KissMachineKinect
         // UI
         private MinPlayerLine _minPlayerLine;
         private Timer _photoCountdownTimer;
+        private int LowPerformanceFrameCounter = 0;
 
         private int _photoCountDown = (int)KissCountdownStatusService.SpecialKissTexts.Invisible;
         public int PhotoCountDown
@@ -369,6 +373,11 @@ namespace KissMachineKinect
         private void Reader_ColorFrameArrived(ColorFrameReader sender, ColorFrameArrivedEventArgs args)
         {
             if (ShowTakenPhoto) return;
+            if (LowPerformanceMode)
+            {
+                LowPerformanceFrameCounter++;
+                if (LowPerformanceFrameCounter%2 == 0) return;
+            }
 
             var colorFrameProcessed = false;
 
