@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Networking.Connectivity;
 using Windows.Storage;
-using Windows.UI.Xaml.Media.Imaging;
 using Windows.Web.Http;
 using Kazyx.DeviceDiscovery;
 using Kazyx.RemoteApi;
@@ -31,10 +28,20 @@ namespace KissMachineKinect.Services
             _discovery.SonyCameraDeviceDiscovered += DiscoveryOnSonyCameraDeviceDiscovered;
             _httpClient = new HttpClient();
             Debug.WriteLine("Camera service initialized");
+            NetworkInformation.NetworkStatusChanged += NetworkInformation_NetworkStatusChanged;
+        }
+
+        public void Suspend()
+        {
+            _discovery.Finished -= DiscoveryOnFinished;
+            _discovery.SonyCameraDeviceDiscovered -= DiscoveryOnSonyCameraDeviceDiscovered;
+            _discovery = null;
+            NetworkInformation.NetworkStatusChanged -= NetworkInformation_NetworkStatusChanged;
         }
 
         #region Discovery
-        private bool _cameraSearchRunning = false;
+        private bool _cameraSearchRunning;
+        private bool _cameraCheckRunning;
 
         public void ForceRestart()
         {
@@ -44,20 +51,14 @@ namespace KissMachineKinect.Services
 
         public void StartCameraSearch()
         {
-            if (_cameraSearchRunning)
-            {
-                return;
-            }
-
+            if (_cameraSearchRunning) return;
             _cameraSearchRunning = true;
-            NetworkInformation.NetworkStatusChanged += NetworkInformation_NetworkStatusChanged;
 
             _discovery.SearchSonyCameraDevices();
         }
 
         public void StopCameraSearch()
         {
-            NetworkInformation.NetworkStatusChanged -= NetworkInformation_NetworkStatusChanged;
             _canceller?.Cancel();
             _canceller = null;
             _cameraSearchRunning = false;
@@ -71,12 +72,38 @@ namespace KissMachineKinect.Services
 
         CancellationTokenSource _canceller;
 
-        void NetworkInformation_NetworkStatusChanged(object sender)
+        private void NetworkInformation_NetworkStatusChanged(object sender)
         {
-            Debug.WriteLine("NetworkInformation NetworkStatusChanged");
+            Debug.WriteLine("*** NetworkInformation NetworkStatusChanged");
 
             //_discovery.SearchSonyCameraDevices();
-            //startTask();
+            // Test if camera was connected and if it is still reachable - if not, restart search
+            CheckIfCameraIsStillReachable();
+        }
+
+        private async void CheckIfCameraIsStillReachable()
+        {
+            if (_cameraSearchRunning || _cameraCheckRunning) return;
+
+            _cameraCheckRunning = true;
+            Debug.WriteLine("Check if camera is still reachable");
+            var cameraIsConnected = true;
+            try
+            {
+                await GetCameraStatusAsync();
+                Debug.WriteLine("Camera seems OK, got response.");
+            }
+            catch (Exception)
+            {
+                Debug.WriteLine("Exception when trying to get status from camera");
+                cameraIsConnected = false;
+            }
+            _cameraCheckRunning = false;
+            if (!cameraIsConnected)
+            {
+                Debug.WriteLine("Re-starting camera search");
+                StartCameraSearch();
+            }
         }
         
 
@@ -98,9 +125,14 @@ namespace KissMachineKinect.Services
             _camera = new CameraApiClient(new Uri(endpoints["camera"]));
             // TODO maybe do not stop listening for network status changes
             StopCameraSearch();
+            await GetCameraStatusAsync();
+        }
 
-            var x = await _camera.GetEventAsync(false, ApiVersion.V1_2);
-            Debug.WriteLine("Camera status: " + x.CameraStatus);
+        private async Task<Event> GetCameraStatusAsync()
+        {
+            var camStatus = await _camera.GetEventAsync(false, ApiVersion.V1_2);
+            Debug.WriteLine("Camera status: " + camStatus.CameraStatus);
+            return camStatus;
         }
         #endregion
 
@@ -110,23 +142,37 @@ namespace KissMachineKinect.Services
         {
             if (_camera == null) return;
 
-            var camStatus = await _camera.GetEventAsync(false, ApiVersion.V1_2);
-            Debug.WriteLine("Camera status: " + camStatus.CameraStatus);
-
-            // We need to start rec mode before taking pictures
-            if (camStatus.CameraStatus.Equals(EventParam.NotReady, StringComparison.OrdinalIgnoreCase))
+            try
             {
-                // Camera is not ready - start rec mode
-                await _camera.StartRecModeAsync();
-                Debug.WriteLine("Camera rec mode started");
+                var camStatus = await _camera.GetEventAsync(false, ApiVersion.V1_2);
+                Debug.WriteLine("Camera status: " + camStatus.CameraStatus);
+
+                // We need to start rec mode before taking pictures
+                if (camStatus.CameraStatus.Equals(EventParam.NotReady, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Camera is not ready - start rec mode
+                    await _camera.StartRecModeAsync();
+                    Debug.WriteLine("Camera rec mode started");
+                }
+            }
+            catch (RemoteApiException ex)
+            {
+                Debug.WriteLine("Exception while preparing to take a photo: " + ex.StatusCode);
             }
         }
 
         public async Task PutCameraToSleep()
         {
             if (_camera == null) return;
-            await _camera.StopRecModeAsync();
-            Debug.WriteLine("Camera rec mode stopped");
+            try
+            {
+                await _camera.StopRecModeAsync();
+                Debug.WriteLine("Camera rec mode stopped");
+            }
+            catch (RemoteApiException ex)
+            {
+                Debug.WriteLine("Exception while putting camera to sleep: " + ex.StatusCode);
+            }
         }
 
         public async Task<StorageFile> TakePhoto()

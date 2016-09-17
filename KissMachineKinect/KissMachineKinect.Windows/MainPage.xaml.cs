@@ -198,8 +198,10 @@ namespace KissMachineKinect
 
         private void InitCamera()
         {
-            if (_sonyCameraService != null) return;
-            _sonyCameraService = new SonyCameraService();
+            if (_sonyCameraService == null)
+            {
+                _sonyCameraService = new SonyCameraService();
+            }
             _sonyCameraService.Init();
         }
 
@@ -229,10 +231,7 @@ namespace KissMachineKinect
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
-            if (_sonyCameraService == null)
-            {
-                InitCamera();
-            }
+            InitCamera();
             _sonyCameraService?.ForceRestart();
         }
 
@@ -242,6 +241,7 @@ namespace KissMachineKinect
             Debug.WriteLine("OnNavigatedFrom");
 
             _sonyCameraService.StopCameraSearch();
+            _sonyCameraService.Suspend();
 
             // Body is IDisposables
             if (_bodies != null)
@@ -723,7 +723,7 @@ namespace KissMachineKinect
 
         private async Task StartKissPhotoTimer()
         {
-            if (_photoCountdownTimer != null || _photoTaken) return;
+            if (_photoCountdownTimer != null || _photoTaken || ShowTakenPhoto) return;
             Debug.WriteLine("Start kiss photo timer");
             SetCountdown(CountdownStartValue);
             _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(CountdownSpeedInS), TimeSpan.FromSeconds(CountdownSpeedInS));
@@ -771,6 +771,7 @@ namespace KissMachineKinect
                         // Set countdown timer to clear picture from screen after 10 seconds
                         SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.PhotoTaken);
                         Debug.WriteLine("Start clear picture photo countdown timer");
+                        _photoCountdownTimer.Dispose();
                         _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(ClearPictureSpeedInS), TimeSpan.FromSeconds(ClearPictureSpeedInS));
                         return;
                     case 1:
