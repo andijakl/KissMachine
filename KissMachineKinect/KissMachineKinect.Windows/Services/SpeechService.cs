@@ -36,12 +36,14 @@ namespace KissMachineKinect.Services
                     break;
                 }
             }
+            Debug.WriteLine("Speech initialized");
         }
 
         public void Suspend()
         {
             _synthesizer.Dispose();
             _synthesizer = null;
+            Debug.WriteLine("Speech disposed");
         }
 
         public async Task SpeakTextAsync(string textToSpeak)

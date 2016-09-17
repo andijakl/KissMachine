@@ -829,8 +829,9 @@ namespace KissMachineKinect
 
         private async Task StopKissPhotoTimer(bool setToInvisible = true)
         {
-            // If no timer is running, don't do anything
-            // Do not stop the timer if currently showing the photo so that it will be cleared again
+            // If no timer is running, don't do anything.
+            // Do not stop the timer if currently showing the photo so that it will be cleared again.
+            // If in "give a kiss" state, in any case proceed to setting text to invisbile - no timer is running.
             if (PhotoCountDown != (int)KissCountdownStatusService.SpecialKissTexts.GiveAKiss 
                 && (_photoCountdownTimer == null || ShowTakenPhoto)) return;
 
@@ -857,7 +858,12 @@ namespace KissMachineKinect
             _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 PhotoCountDown = newValue;
-                if (PhotoCountDown == (int)KissCountdownStatusService.SpecialKissTexts.Invisible) return;
+                if (PhotoCountDown == (int) KissCountdownStatusService.SpecialKissTexts.Invisible)
+                {
+                    PhotoCountDownText = string.Empty;
+                    Debug.WriteLine("Set countdown to invisible");
+                    return;
+                }
                 // Convert countdown value to text
                 var textConverter = new CountdownIntToStringConverter();
                 PhotoCountDownText = (string)textConverter.Convert(PhotoCountDown, typeof(string), null, Windows.Globalization.Language.CurrentInputMethodLanguageTag);

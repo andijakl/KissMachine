@@ -13,9 +13,8 @@ namespace KissMachineKinect.Models
     {
         public ulong TrackingId { get; set; }
         public int BodyNum { get; set; }
-        private Ellipse FaceCircle1 { get; set; }
-        private Ellipse FaceCircle2 { get; set; }
-        public double CircleSize { get; set; } = 30;
+        private TextBlock HeartFace { get; }
+        public double CircleSize { get; set; } = 90;
         public ColorSpacePoint FacePosInColor { get; set; }
 
         public CameraSpacePoint FacePosInCamera { get; set; }
@@ -24,52 +23,43 @@ namespace KissMachineKinect.Models
         {
             BodyNum = bodyNum;
             TrackingId = trackingId;
-            FaceCircle1 = new Ellipse
+            HeartFace = new TextBlock
             {
-                Fill = new SolidColorBrush(Colors.Red),
-                Opacity = 0.2,
-                Visibility = Visibility.Collapsed,
-                Width = CircleSize,
-                Height = CircleSize
-            };
-            FaceCircle2 = new Ellipse
-            {
-                Fill = new SolidColorBrush(Colors.Red),
+                Text = "\uEB52",
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = CircleSize,
+                Foreground = new SolidColorBrush(Colors.Red),
                 Opacity = 0.5,
                 Visibility = Visibility.Collapsed,
-                Width = CircleSize / 2.0,
-                Height = CircleSize / 2.0
+                Width = CircleSize,
+                Height = CircleSize,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
             };
-            drawingCanvas.Children.Add(FaceCircle1);
-            drawingCanvas.Children.Add(FaceCircle2);
+            drawingCanvas.Children.Add(HeartFace);
         }
 
         public void RemoveFromWorld(Canvas drawingCanvas)
         {
-            drawingCanvas.Children.Remove(FaceCircle1);
-            drawingCanvas.Children.Remove(FaceCircle2);
+            drawingCanvas.Children.Remove(HeartFace);
         }
 
         public bool IsVisible()
         {
-            return FaceCircle1.Visibility == Visibility.Visible;
+            return HeartFace.Visibility == Visibility.Visible;
         }
 
         public void SetVisibility(bool visible)
         {
-            FaceCircle1.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-            FaceCircle2.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
-            //FaceCircle.Visibility = Visibility.Collapsed;
+            HeartFace.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         }
 
         public void SetPosition(CameraSpacePoint facePosInCamera, ColorSpacePoint facePosInColor)
         {
             FacePosInCamera = facePosInCamera;
             FacePosInColor = facePosInColor;
-            Canvas.SetLeft(FaceCircle1, facePosInColor.X - CircleSize / 2.0);
-            Canvas.SetTop(FaceCircle1, facePosInColor.Y - CircleSize / 2.0);
-            Canvas.SetLeft(FaceCircle2, facePosInColor.X - CircleSize / 4.0);
-            Canvas.SetTop(FaceCircle2, facePosInColor.Y - CircleSize / 4.0);
+            Canvas.SetLeft(HeartFace, facePosInColor.X - CircleSize / 2.0);
+            Canvas.SetTop(HeartFace, facePosInColor.Y - CircleSize / 2.0);
         }
 
     }

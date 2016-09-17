@@ -23,7 +23,7 @@
             <RowDefinition Height="1*"></RowDefinition>
             <RowDefinition Height="1*"></RowDefinition>
         </Grid.RowDefinitions>
-        <MediaElement x:Name="SpeakerMedia" AutoPlay="False" />
+        <MediaElement x:Name="SpeakerMedia" AutoPlay="False" AudioCategory="GameEffects" />
 
         <Viewbox Grid.Row="0" Grid.RowSpan="5" x:Name="MainViewbox">
             <Grid x:Name="DisplayGrid">
@@ -42,7 +42,7 @@
         <Viewbox Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                  Grid.Row="1" Grid.RowSpan="3" Grid.Column="0"
                  Visibility="{Binding PhotoCountDown, Converter={StaticResource IntToVisibilityConverter}}" >
-            <TextBlock x:Name="HeartBackground" Text="&#xE00B;" 
+            <TextBlock x:Name="HeartBackground" Text="&#xEB52;" 
                        FontFamily="Segoe MDL2 Assets" 
                        Foreground="{StaticResource CustomAccentBrush}" FontSize="100" 
                        HorizontalAlignment="Center" VerticalAlignment="Stretch"  />
