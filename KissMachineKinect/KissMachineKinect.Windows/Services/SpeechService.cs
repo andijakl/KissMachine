@@ -10,13 +10,20 @@ namespace KissMachineKinect.Services
     public class SpeechService
     {
         private const string PreferredLanguage = "de";
-        private readonly SpeechSynthesizer _synthesizer;
+        private SpeechSynthesizer _synthesizer;
         private readonly MediaElement _speakerMediaElement;
 
         public SpeechService(MediaElement speakerMedia)
         {
             _speakerMediaElement = speakerMedia;
-            _synthesizer = new SpeechSynthesizer();
+        }
+
+        public void Init()
+        {
+            if (_synthesizer == null)
+            {
+                _synthesizer = new SpeechSynthesizer();
+            }
             // get all of the installed voices
             var voices = SpeechSynthesizer.AllVoices;
             foreach (var curVoice in voices)
@@ -29,8 +36,12 @@ namespace KissMachineKinect.Services
                     break;
                 }
             }
+        }
 
-            // TODO Dispose synthesizer at the end!
+        public void Suspend()
+        {
+            _synthesizer.Dispose();
+            _synthesizer = null;
         }
 
         public async Task SpeakTextAsync(string textToSpeak)

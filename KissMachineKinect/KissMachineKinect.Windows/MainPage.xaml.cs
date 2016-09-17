@@ -193,7 +193,6 @@ namespace KissMachineKinect
             _resourceLoader = ResourceLoader.GetForCurrentView();
             BusyStatus.SetBusy(_resourceLoader.GetString("BusyLoading"));
             InitKinect();
-            InitCamera();
         }
 
         private void InitCamera()
@@ -204,6 +203,7 @@ namespace KissMachineKinect
             }
             _sonyCameraService.Init();
         }
+        
 
         private void InitGame()
         {
@@ -223,7 +223,6 @@ namespace KissMachineKinect
             // ----------------------------------------------------------------------------------
             // Initialize game
             _players = new List<PlayerInfo>();
-            _speechService = new SpeechService(SpeakerMedia);
 
             _gameInitialized = true;
         }
@@ -233,6 +232,13 @@ namespace KissMachineKinect
             base.OnNavigatedTo(e);
             InitCamera();
             _sonyCameraService?.ForceRestart();
+
+            if (_speechService == null)
+            {
+                _speechService = new SpeechService(SpeakerMedia);
+            }
+            _speechService.Init();
+
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
@@ -240,8 +246,10 @@ namespace KissMachineKinect
             base.OnNavigatedFrom(e);
             Debug.WriteLine("OnNavigatedFrom");
 
-            _sonyCameraService.StopCameraSearch();
-            _sonyCameraService.Suspend();
+            _speechService?.Suspend();
+
+            _sonyCameraService?.StopCameraSearch();
+            _sonyCameraService?.Suspend();
 
             // Body is IDisposables
             if (_bodies != null)
@@ -410,7 +418,7 @@ namespace KissMachineKinect
             if (LowPerformanceMode)
             {
                 LowPerformanceFrameCounter++;
-                if (LowPerformanceFrameCounter%2 == 0) return;
+                if (LowPerformanceFrameCounter%3 != 0) return;
             }
 
             var colorFrameProcessed = false;
@@ -633,7 +641,7 @@ namespace KissMachineKinect
                 {
                     // Stop timer if it was running and reset if a photo was already taken
                     // (people have to get away from each other to start another photo)
-                    await StopKissPhotoTimer();
+                    await StopKissPhotoTimer(false);
                     if (minPair.DistanceInM > ShowHintKissDistanceInM)
                     {
                         _photoTaken = false;
@@ -642,7 +650,7 @@ namespace KissMachineKinect
 
                 if (_photoCountdownTimer == null &&
                     minPair.DistanceInM < ShowHintKissDistanceInM &&
-                    !_photoTaken)
+                    !_photoTaken && !ShowTakenPhoto)
                 {
                     // Show hint to kiss
                     SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.GiveAKiss);
@@ -793,7 +801,6 @@ namespace KissMachineKinect
 
         private async Task TakePhoto()
         {
-            // TODO Camera error handling
             try
             {
                 // Try to take the picture with the connected Sony camera
@@ -824,12 +831,13 @@ namespace KissMachineKinect
         {
             // If no timer is running, don't do anything
             // Do not stop the timer if currently showing the photo so that it will be cleared again
-            if (_photoCountdownTimer == null || ShowTakenPhoto) return;
+            if (PhotoCountDown != (int)KissCountdownStatusService.SpecialKissTexts.GiveAKiss 
+                && (_photoCountdownTimer == null || ShowTakenPhoto)) return;
 
-            Debug.WriteLine("Stopping kiss timer? (set to invisible: " + setToInvisible + ")");
-            _photoCountdownTimer.Dispose();
+            //Debug.WriteLine("Stopping kiss timer? (set to invisible: " + setToInvisible + ")");
+            _photoCountdownTimer?.Dispose();
             _photoCountdownTimer = null;
-            Debug.WriteLine("-> stopped");
+            //Debug.WriteLine("-> stopped");
             if (setToInvisible)
             {
                 await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
