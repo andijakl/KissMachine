@@ -144,6 +144,7 @@
     <Compile Include="Properties\Annotations.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\KissCountdownStatusService.cs" />
+    <Compile Include="Services\SonyCameraService.cs" />
     <Compile Include="Services\SpeechService.cs" />
     <Compile Include="Utilities\DrawingUtils.cs" />
   </ItemGroup>
@@ -152,6 +153,9 @@
       <SubType>Designer</SubType>
     </AppxManifest>
     <None Include="KissMachineKinect.Windows_TemporaryKey.pfx" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <PRIResource Include="Strings\de\Resources.resw" />
     <PRIResource Include="Strings\en\Resources.resw" />
   </ItemGroup>
@@ -177,6 +181,22 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.9.0.1\lib\portable-net45+wp80+win8+wpa81\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\kz-remote-api\Project\KzRemoteApiUniversal.csproj">
+      <Project>{415bafeb-dfd7-4af9-974c-eec2e9efd930}</Project>
+      <Name>KzRemoteApiUniversal</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\kz-ssdp-discovery\Project\KzSsdpDiscoveryUniversal.csproj">
+      <Project>{a1246c04-298d-4189-8ac8-2105288d2ec6}</Project>
+      <Name>KzSsdpDiscoveryUniversal</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>

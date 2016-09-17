@@ -33,6 +33,7 @@
         
         <Image Grid.Row="0" Grid.RowSpan="5" Grid.Column="0" 
                x:Name="TakenPhoto" Stretch="UniformToFill" 
+               Source="{Binding TakenPhotoBitmap, Mode=OneWay}"
                Visibility="{Binding ShowTakenPhoto, Converter={StaticResource BoolToVisibilityConverter}}" />
 
         <Rectangle Grid.Row="2" Grid.Column="0" VerticalAlignment="Stretch" 

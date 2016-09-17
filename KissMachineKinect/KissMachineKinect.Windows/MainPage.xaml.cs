@@ -12,6 +12,7 @@ using Windows.ApplicationModel.Resources;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
@@ -121,6 +122,18 @@ namespace KissMachineKinect
             }
         }
 
+        private WriteableBitmap _takenPhotoBitmap;
+        public WriteableBitmap TakenPhotoBitmap
+        {
+            get { return _takenPhotoBitmap; }
+            set
+            {
+                if (value == _takenPhotoBitmap) return;
+                _takenPhotoBitmap = value;
+                OnPropertyChanged();
+            }
+        }
+
         private CoreDispatcher _dispatcher;
         private ResourceLoader _resourceLoader;
         private SpeechService _speechService;
@@ -130,6 +143,7 @@ namespace KissMachineKinect
 
         private BusyStatus _busyStatus;
         private DispatcherTimer _kinectInitWaitTimer;
+        private SonyCameraService _sonyCameraService;
 
         /// <summary>
         /// Full-screen busy indicator that blocks the rest of the UI.
@@ -179,6 +193,14 @@ namespace KissMachineKinect
             _resourceLoader = ResourceLoader.GetForCurrentView();
             BusyStatus.SetBusy(_resourceLoader.GetString("BusyLoading"));
             InitKinect();
+            InitCamera();
+        }
+
+        private void InitCamera()
+        {
+            if (_sonyCameraService != null) return;
+            _sonyCameraService = new SonyCameraService();
+            _sonyCameraService.Init();
         }
 
         private void InitGame()
@@ -204,10 +226,22 @@ namespace KissMachineKinect
             _gameInitialized = true;
         }
 
+        protected override void OnNavigatedTo(NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+            if (_sonyCameraService == null)
+            {
+                InitCamera();
+            }
+            _sonyCameraService?.ForceRestart();
+        }
+
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
             Debug.WriteLine("OnNavigatedFrom");
+
+            _sonyCameraService.StopCameraSearch();
 
             // Body is IDisposables
             if (_bodies != null)
@@ -418,7 +452,7 @@ namespace KissMachineKinect
             {
                 case VirtualKey.Space:
                     // Take screenshot when releasing the space key
-                    await SavePhotoToFile(_bitmap);
+                    await TakePhoto();
                     break;
                 case VirtualKey.D:
                     // Disable / Enable debug mode
@@ -593,7 +627,7 @@ namespace KissMachineKinect
                 if (minPair.DistanceInM < TriggerKissCountdownDistanceInM && !_photoTaken)
                 {
                     // Start kiss timer?
-                    StartKissPhotoTimer();
+                    await StartKissPhotoTimer();
                 }
                 else
                 {
@@ -687,11 +721,15 @@ namespace KissMachineKinect
 
         #region Photo Countdown
 
-        private void StartKissPhotoTimer()
+        private async Task StartKissPhotoTimer()
         {
             if (_photoCountdownTimer != null || _photoTaken) return;
+            Debug.WriteLine("Start kiss photo timer");
             SetCountdown(CountdownStartValue);
             _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(CountdownSpeedInS), TimeSpan.FromSeconds(CountdownSpeedInS));
+
+            // Prepare camera for taking a photo
+            await _sonyCameraService.PrepareTakePhoto();
         }
 
 
@@ -699,51 +737,51 @@ namespace KissMachineKinect
         {
             await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                if (PhotoCountDown == (int)KissCountdownStatusService.SpecialKissTexts.PhotoTaken)
+                switch (PhotoCountDown)
                 {
-                    // Clear taken picture from screen
-                    ShowTakenPhoto = false;
-                    var stopTimer = true;
-                    // Are people still standing together?
-                    var minPair = CheckPlayersCloseBy();
-                    if (minPair?.DistanceInM < ShowHintKissDistanceInM)
-                    {
-                        // Don't stop timer yet
-                        SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.AnotherPhoto);
-                        stopTimer = false;
-                    }
-                    if (stopTimer)
-                    {
-                        // People are not standing together anymore - we can stop the timer and hide the text
+                    case (int)KissCountdownStatusService.SpecialKissTexts.PhotoTaken:
+                        Debug.WriteLine("Clear taken photo from screen");
+                        // Clear taken picture from screen
+                        ShowTakenPhoto = false;
+                        TakenPhotoBitmap = null;
+                        var stopTimer = true;
+                        // Are people still standing together?
+                        var minPair = CheckPlayersCloseBy();
+                        if (minPair?.DistanceInM < ShowHintKissDistanceInM)
+                        {
+                            // Don't stop timer yet
+                            SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.AnotherPhoto);
+                            stopTimer = false;
+                        }
+                        if (stopTimer)
+                        {
+                            // People are not standing together anymore - we can stop the timer and hide the text
+                            await StopKissPhotoTimer();
+                            _photoTaken = false;
+                        }
+                        return;
+                    case (int)KissCountdownStatusService.SpecialKissTexts.AnotherPhoto:
+                        // Additional time has passed - disable the lock so that another photo can be taken!
                         await StopKissPhotoTimer();
                         _photoTaken = false;
-                    }
-                    return;
-                }
-                if (PhotoCountDown == (int)KissCountdownStatusService.SpecialKissTexts.AnotherPhoto)
-                {
-                    // Additional time has passed - disable the lock so that another photo can be taken!
-                    await StopKissPhotoTimer();
-                    _photoTaken = false;
-                    return;
-                }
-                if (PhotoCountDown == (int)KissCountdownStatusService.SpecialKissTexts.Kiss)
-                {
-                    // Stop kiss countdown timer
-                    await StopKissPhotoTimer(false);
-                    // Set countdown timer to clear picture from screen after 10 seconds
-                    SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.PhotoTaken);
-                    _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(ClearPictureSpeedInS), TimeSpan.FromSeconds(ClearPictureSpeedInS));
-                }
-                if (PhotoCountDown == 1)
-                {
-                    SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.Kiss);
-                    // Keep current picture on the screen
-                    ShowTakenPhoto = true;
-                    // Don't take another picture until a longer time has passed or people are gone
-                    _photoTaken = true;
-                    // Save photo to file
-                    await SavePhotoToFile(_bitmap);
+                        return;
+                    case (int)KissCountdownStatusService.SpecialKissTexts.Kiss:
+                        // Stop kiss countdown timer
+                        await StopKissPhotoTimer(false);
+                        // Set countdown timer to clear picture from screen after 10 seconds
+                        SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.PhotoTaken);
+                        Debug.WriteLine("Start clear picture photo countdown timer");
+                        _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(ClearPictureSpeedInS), TimeSpan.FromSeconds(ClearPictureSpeedInS));
+                        return;
+                    case 1:
+                        SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.Kiss);
+                        // Keep current picture on the screen
+                        ShowTakenPhoto = true;
+                        // Don't take another picture until a longer time has passed or people are gone
+                        _photoTaken = true;
+                        // Save photo to file
+                        await TakePhoto();
+                        return;
                 }
                 if (PhotoCountDown > 1)
                 {
@@ -752,12 +790,45 @@ namespace KissMachineKinect
             });
         }
 
+        private async Task TakePhoto()
+        {
+            // TODO Camera error handling
+            try
+            {
+                // Try to take the picture with the connected Sony camera
+                var photoFile = await _sonyCameraService.TakePhoto();
+                await LoadFileToViewfinderBitmap(photoFile);
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine("Failed taking photo with camera: " + e);
+                // Take photo with Kinect if Camera fails.
+                await SavePhotoToFile(_bitmap);
+                TakenPhotoBitmap = _bitmap;
+                TakenPhotoBitmap.Invalidate();
+            }
+        }
+
+        private async Task LoadFileToViewfinderBitmap(StorageFile photoFileName)
+        {
+            using (var stream = await photoFileName.OpenAsync(FileAccessMode.ReadWrite))
+            {
+                TakenPhotoBitmap = new WriteableBitmap(1, 1);
+                TakenPhotoBitmap.SetSource(stream);
+                TakenPhotoBitmap.Invalidate();
+            }
+        }
+
         private async Task StopKissPhotoTimer(bool setToInvisible = true)
         {
-            if (_photoCountdownTimer == null) return;
-            Debug.WriteLine("Stopping kiss timer");
+            // If no timer is running, don't do anything
+            // Do not stop the timer if currently showing the photo so that it will be cleared again
+            if (_photoCountdownTimer == null || ShowTakenPhoto) return;
+
+            Debug.WriteLine("Stopping kiss timer? (set to invisible: " + setToInvisible + ")");
             _photoCountdownTimer.Dispose();
             _photoCountdownTimer = null;
+            Debug.WriteLine("-> stopped");
             if (setToInvisible)
             {
                 await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -765,9 +836,10 @@ namespace KissMachineKinect
                     // Set to invisible
                     SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.Invisible);
                 });
+                await _sonyCameraService.PutCameraToSleep();
             }
         }
-
+        
         private void SetCountdown(int newValue)
         {
             if (PhotoCountDown == newValue) return;
@@ -775,12 +847,12 @@ namespace KissMachineKinect
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
             _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                Debug.WriteLine("Set countdown to: " + newValue);
                 PhotoCountDown = newValue;
                 if (PhotoCountDown == (int)KissCountdownStatusService.SpecialKissTexts.Invisible) return;
                 // Convert countdown value to text
                 var textConverter = new CountdownIntToStringConverter();
                 PhotoCountDownText = (string)textConverter.Convert(PhotoCountDown, typeof(string), null, Windows.Globalization.Language.CurrentInputMethodLanguageTag);
+                Debug.WriteLine("Set countdown to: " + newValue + " -> " + PhotoCountDownText);
                 await _speechService.SpeakTextAsync(PhotoCountDownText);
             });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
