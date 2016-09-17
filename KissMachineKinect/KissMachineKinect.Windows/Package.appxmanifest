@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest">
-  <Identity Name="8d1f1b59-a1c4-4418-a5c3-2d7dbede56b7" Publisher="CN=jaklland" Version="1.0.0.0" />
+  <Identity Name="8d1f1b59-a1c4-4418-a5c3-2d7dbede56b7" Publisher="CN=jaklland" Version="1.0.0.2" />
   <Properties>
     <DisplayName>Kiss Machine for Kinect</DisplayName>
     <PublisherDisplayName>Andreas Jakl</PublisherDisplayName>

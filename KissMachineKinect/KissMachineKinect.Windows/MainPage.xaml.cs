@@ -418,7 +418,7 @@ namespace KissMachineKinect
             if (LowPerformanceMode)
             {
                 LowPerformanceFrameCounter++;
-                if (LowPerformanceFrameCounter%3 != 0) return;
+                if (LowPerformanceFrameCounter%2 != 0) return;
             }
 
             var colorFrameProcessed = false;
@@ -507,10 +507,10 @@ namespace KissMachineKinect
             // ReSharper disable once SwitchStatementMissingSomeCases
             switch (DefaultPhotoFileFormat)
             {
-                case FileFormat.Jpeg:
-                    fileName += ".jpeg";
-                    bitmapEncoderGuid = BitmapEncoder.JpegEncoderId;
-                    break;
+                //case FileFormat.Jpeg:
+                //    fileName += ".jpeg";
+                //    bitmapEncoderGuid = BitmapEncoder.JpegEncoderId;
+                //    break;
 
                 case FileFormat.Png:
                     fileName += ".png";
