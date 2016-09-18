@@ -830,7 +830,7 @@ namespace KissMachineKinect
             {
                 // Try to take the picture with the connected Sony camera
                 var photoFile = await _sonyCameraService.TakePhoto();
-                await LoadFileToViewfinderBitmap(photoFile);
+                await LoadFileToViewfinderBitmap(photoFile, true);
             }
             catch (Exception e)
             {
@@ -842,12 +842,19 @@ namespace KissMachineKinect
             }
         }
 
-        private async Task LoadFileToViewfinderBitmap(StorageFile photoFileName)
+        private async Task LoadFileToViewfinderBitmap(StorageFile photoFileName, bool horizontallyFlipImage)
         {
             using (var stream = await photoFileName.OpenAsync(FileAccessMode.ReadWrite))
             {
                 TakenPhotoBitmap = new WriteableBitmap(1, 1);
                 TakenPhotoBitmap.SetSource(stream);
+                // Flip image from camea horizontally.
+                // Kinect shows images as flipped to match the viewfinder with a mirror.
+                // External camera has everything as it should be.
+                // -> we need to rotate external camera for display so that it corresponds
+                // to what people are expecting.
+                // Do not flip the final image, as it'd be wrong actually.
+                TakenPhotoBitmap.Flip(WriteableBitmapExtensions.FlipMode.Horizontal);
                 TakenPhotoBitmap.Invalidate();
             }
         }
