@@ -1,7 +1,9 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Networking.Connectivity;
@@ -10,11 +12,31 @@ using Windows.Web.Http;
 using Kazyx.DeviceDiscovery;
 using Kazyx.RemoteApi;
 using Kazyx.RemoteApi.Camera;
+using KissMachineKinect.Annotations;
 
 namespace KissMachineKinect.Services
 {
-    public class SonyCameraService
+    public class SonyCameraService : INotifyPropertyChanged
     {
+        public enum CameraStatusValues
+        {
+            NotConnected,
+            Searching,
+            Connected,
+            RecMode
+        }
+
+        public CameraStatusValues CameraStatus
+        {
+            get { return _cameraStatus; }
+            set
+            {
+                if (_cameraStatus == value) return;
+                _cameraStatus = value;
+                OnPropertyChanged();
+            }
+        }
+
         private CameraApiClient _camera;
         private HttpClient _httpClient;
         private SsdpDiscovery _discovery;
@@ -27,6 +49,7 @@ namespace KissMachineKinect.Services
             _discovery.Finished += DiscoveryOnFinished;
             _discovery.SonyCameraDeviceDiscovered += DiscoveryOnSonyCameraDeviceDiscovered;
             _httpClient = new HttpClient();
+            CameraStatus = CameraStatusValues.NotConnected;
             Debug.WriteLine("Camera service initialized");
             NetworkInformation.NetworkStatusChanged += NetworkInformation_NetworkStatusChanged;
         }
@@ -37,6 +60,7 @@ namespace KissMachineKinect.Services
             _discovery.SonyCameraDeviceDiscovered -= DiscoveryOnSonyCameraDeviceDiscovered;
             _discovery = null;
             NetworkInformation.NetworkStatusChanged -= NetworkInformation_NetworkStatusChanged;
+            CameraStatus = CameraStatusValues.NotConnected;
         }
 
         #region Discovery
@@ -55,28 +79,30 @@ namespace KissMachineKinect.Services
             _cameraSearchRunning = true;
 
             _discovery.SearchSonyCameraDevices();
+            CameraStatus = CameraStatusValues.Searching;
         }
 
         public void StopCameraSearch()
         {
-            _canceller?.Cancel();
-            _canceller = null;
             _cameraSearchRunning = false;
+            if (CameraStatus == CameraStatusValues.Searching)
+            {
+                CameraStatus = CameraStatusValues.NotConnected;
+            }
         }
 
         public void Finish()
         {
             StopCameraSearch();
         }
-        
 
-        CancellationTokenSource _canceller;
+        
+        private CameraStatusValues _cameraStatus = CameraStatusValues.NotConnected;
 
         private void NetworkInformation_NetworkStatusChanged(object sender)
         {
             Debug.WriteLine("*** NetworkInformation NetworkStatusChanged");
-
-            //_discovery.SearchSonyCameraDevices();
+            
             // Test if camera was connected and if it is still reachable - if not, restart search
             CheckIfCameraIsStillReachable();
         }
@@ -123,7 +149,7 @@ namespace KissMachineKinect.Services
             Debug.WriteLine("Discovered Device");
             var endpoints = e.SonyCameraDevice.Endpoints; // Dictionary of each service name and endpoint.
             _camera = new CameraApiClient(new Uri(endpoints["camera"]));
-            // TODO maybe do not stop listening for network status changes
+            CameraStatus = CameraStatusValues.Connected;
             StopCameraSearch();
             await GetCameraStatusAsync();
         }
@@ -152,6 +178,7 @@ namespace KissMachineKinect.Services
                 {
                     // Camera is not ready - start rec mode
                     await _camera.StartRecModeAsync();
+                    CameraStatus = CameraStatusValues.RecMode;
                     Debug.WriteLine("Camera rec mode started");
                 }
             }
@@ -167,6 +194,7 @@ namespace KissMachineKinect.Services
             try
             {
                 await _camera.StopRecModeAsync();
+                CameraStatus = CameraStatusValues.Connected;
                 Debug.WriteLine("Camera rec mode stopped");
             }
             catch (RemoteApiException ex)
@@ -211,5 +239,12 @@ namespace KissMachineKinect.Services
 
         #endregion
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        [NotifyPropertyChangedInvocator]
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
 }

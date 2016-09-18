@@ -11,8 +11,8 @@
     RequestedTheme="Dark">
 
     <Page.Resources>
-        <converter:CountdownIntToStringConverter x:Key="CountdownIntToStringConverter" />
         <converter:IntToVisibilityConverter x:Key="IntToVisibilityConverter"/>
+        <converter:CameraStatusToBrushConverter x:Key="CameraStatusToBrushConverter"/>
     </Page.Resources>
 
     <Grid x:Name="LayoutRoot">
@@ -25,17 +25,20 @@
         </Grid.RowDefinitions>
         <MediaElement x:Name="SpeakerMedia" AutoPlay="False" AudioCategory="GameEffects" />
 
+        <!-- Live camera stream -->
         <Viewbox Grid.Row="0" Grid.RowSpan="5" x:Name="MainViewbox">
             <Grid x:Name="DisplayGrid">
                 <Image Name="ColorImg" Stretch="UniformToFill"/>
             </Grid>
         </Viewbox>
         
+        <!-- Overlay with taken photo -->
         <Image Grid.Row="0" Grid.RowSpan="5" Grid.Column="0" 
                x:Name="TakenPhoto" Stretch="UniformToFill" 
                Source="{Binding TakenPhotoBitmap, Mode=OneWay}"
                Visibility="{Binding ShowTakenPhoto, Converter={StaticResource BoolToVisibilityConverter}}" />
 
+        <!-- Text block with instructions for players -->
         <Rectangle Grid.Row="2" Grid.Column="0" VerticalAlignment="Stretch" 
                    HorizontalAlignment="Stretch" Fill="{StaticResource CustomAccentLightTransparentBrush}"
                    Visibility="{Binding PhotoCountDown, Converter={StaticResource IntToVisibilityConverter}}"  />
@@ -60,6 +63,10 @@
                            Foreground="White">
             Text
         </TextBlock>
+        
+        <!-- Camera status -->
+        <SymbolIcon Grid.Row="4" Grid.Column="0" Symbol="AttachCamera" HorizontalAlignment="Right" VerticalAlignment="Bottom" 
+                    Foreground="{Binding CameraStatus, Converter={StaticResource CameraStatusToBrushConverter},Mode=OneWay}" Margin="10"/>
 
         <!-- Debug only: distance information -->
         <TextBlock x:Name="DistTxt" 

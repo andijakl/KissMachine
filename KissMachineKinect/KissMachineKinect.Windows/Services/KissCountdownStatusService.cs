@@ -6,6 +6,9 @@ namespace KissMachineKinect.Services
 {
     public class KissCountdownStatusService
     {
+        /// <summary>
+        /// These int values have a special status meaning. Everything > 0 and less than 10 can be used as countdown values.
+        /// </summary>
         public enum SpecialKissTexts
         {
             Invisible = -1,
@@ -16,6 +19,8 @@ namespace KissMachineKinect.Services
         }
 
         private static readonly Random Rnd = new Random();
+
+        // How many different variants of the texts are available...
         private const int NumGiveAKiss = 6;
         private const int NumKiss = 4;
         private const int NumKissThankYou = 7;

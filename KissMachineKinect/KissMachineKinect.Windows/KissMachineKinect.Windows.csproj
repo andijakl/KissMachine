@@ -133,6 +133,7 @@
       <DependentUpon>BusyControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Converter\BoolToVisibilityConverter.cs" />
+    <Compile Include="Converter\CameraStatusToBrushConverter.cs" />
     <Compile Include="Converter\CountdownIntToStringConverter.cs" />
     <Compile Include="Converter\IntToVisibilityConverter.cs" />
     <Compile Include="MainPage.xaml.cs">
@@ -144,6 +145,7 @@
     <Compile Include="Models\Vec3.cs" />
     <Compile Include="Models\PlayerInfo.cs" />
     <Compile Include="Properties\Annotations.cs" />
+    <Compile Include="Properties\Annotations1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\KissCountdownStatusService.cs" />
     <Compile Include="Services\SonyCameraService.cs" />
