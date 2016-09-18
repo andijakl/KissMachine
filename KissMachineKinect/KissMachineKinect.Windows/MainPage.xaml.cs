@@ -372,6 +372,7 @@ namespace KissMachineKinect
         {
             if (args.IsAvailable && !_kinectStarted && _kinectInitialized)
             {
+                Debug.WriteLine("Found Kinect");
                 _kinectInitWaitTimer?.Stop();
                 _kinectInitWaitTimer = null;
                 _kinectStarted = true;
@@ -389,6 +390,7 @@ namespace KissMachineKinect
                 }
                 // If no Kinect is available, we'll only get one unavailable callback
                 // Wait for a few seconds, then show error info
+                Debug.WriteLine("Kinect not available - starting timer for error message and to give time for re-connect");
                 _kinectInitWaitTimer = new DispatcherTimer();
                 _kinectInitWaitTimer.Tick += KinectInitWaitTimerOnTick;
                 _kinectInitWaitTimer.Interval = TimeSpan.FromSeconds(5);
@@ -398,6 +400,7 @@ namespace KissMachineKinect
 
             if (_kinectStarted && !args.IsAvailable && _kinectInitialized)
             {
+                Debug.WriteLine("Kinect was already running, but is no longer available");
                 // Kinect was already running, but is no longer available
                 await ShowNoKinectAvailableMessageAsync();
             }
