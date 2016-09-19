@@ -18,6 +18,7 @@ namespace KissMachineKinect.Services
 {
     public class SonyCameraService : INotifyPropertyChanged
     {
+        private const ApiVersion CameraApiVersion = ApiVersion.V1_2;
         public enum CameraStatusValues
         {
             NotConnected,
@@ -156,7 +157,7 @@ namespace KissMachineKinect.Services
 
         private async Task<Event> GetCameraStatusAsync()
         {
-            var camStatus = await _camera.GetEventAsync(false, ApiVersion.V1_2);
+            var camStatus = await _camera.GetEventAsync(false, CameraApiVersion);
             Debug.WriteLine("Camera status: " + camStatus.CameraStatus);
             return camStatus;
         }
@@ -170,7 +171,7 @@ namespace KissMachineKinect.Services
 
             try
             {
-                var camStatus = await _camera.GetEventAsync(false, ApiVersion.V1_2);
+                var camStatus = await _camera.GetEventAsync(false, CameraApiVersion);
                 Debug.WriteLine("Camera status: " + camStatus.CameraStatus);
 
                 // We need to start rec mode before taking pictures
