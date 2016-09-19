@@ -63,10 +63,18 @@
                            Foreground="White">
             Text
         </TextBlock>
-        
+
         <!-- Camera status -->
-        <SymbolIcon Grid.Row="4" Grid.Column="0" Symbol="AttachCamera" HorizontalAlignment="Right" VerticalAlignment="Bottom" 
-                    Foreground="{Binding CameraStatus, Converter={StaticResource CameraStatusToBrushConverter},Mode=OneWay}" Margin="10"/>
+        <!-- Photo Counter -->
+        <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Bottom" >
+            <TextBlock Text="{Binding PhotoCounter}" 
+                       Visibility="{Binding ShowTakenPhoto, Converter={StaticResource BoolToVisibilityConverter}}"
+                       Foreground="White" FontSize="40" FontFamily="Gabriola" VerticalAlignment="Center" />
+            <SymbolIcon Symbol="AttachCamera" Width="30" Height="30"
+                        Foreground="{Binding CameraStatus, Converter={StaticResource CameraStatusToBrushConverter},Mode=OneWay}" Margin="10"/>
+
+        </StackPanel>
+        
 
         <!-- Debug only: distance information -->
         <TextBlock x:Name="DistTxt" 
@@ -75,7 +83,7 @@
 
         <!-- Busy Indicator -->
         <controls:BusyControl Grid.Row="0" Grid.RowSpan="5"
-                               IsBusy="{Binding BusyStatus.IsBusy}" BusyText="{Binding BusyStatus.BusyText}" 
-                               BusyEnd="{Binding BusyStatus.BusyEnd}" BusyEndedCommand="{Binding BusyEndedCommand}"/>
+                               IsBusy="{Binding BusyStatus.IsBusy, Mode=OneWay}" BusyText="{Binding BusyStatus.BusyText, Mode=OneWay}" 
+                               BusyEnd="{Binding BusyStatus.BusyEnd, Mode=OneWay}" BusyEndedCommand="{Binding BusyEndedCommand}"/>
     </Grid>
 </Page>

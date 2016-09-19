@@ -23,6 +23,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 using Windows.UI.Xaml.Navigation;
 using WindowsPreview.Kinect;
+using KissMachineKinect.Controls;
 using KissMachineKinect.Converter;
 using KissMachineKinect.Models;
 using KissMachineKinect.Properties;
@@ -121,6 +122,20 @@ namespace KissMachineKinect
                 OnPropertyChanged();
             }
         }
+        
+        private int _photoCounter;
+        public int PhotoCounter
+        {
+            get { return _photoCounter; }
+            set
+            {
+                if (value == _photoCounter) return;
+                _photoCounter = value;
+                OnPropertyChanged();
+            }
+        }
+
+        private const string PhotoCounterSettingName = "photoCounter";
 
         private WriteableBitmap _takenPhotoBitmap;
         public WriteableBitmap TakenPhotoBitmap
@@ -170,6 +185,8 @@ namespace KissMachineKinect
         public MainPage()
         {
             InitializeComponent();
+            BusyEndedCommand = new DelegateCommand<object>(BusyEndedMethod);
+
 
 #if DEBUG
             DistTxt.Visibility = Visibility.Visible;
@@ -177,6 +194,17 @@ namespace KissMachineKinect
 
             Loaded += MainPage_Loaded;
             Window.Current.CoreWindow.KeyUp += CoreWindow_KeyUp;
+        }
+
+        public void BusyEndedMethod(object busyEndType)
+        {
+            var endedType = busyEndType as BusyStatus.BusyEndedTypes?;
+            if (endedType == BusyStatus.BusyEndedTypes.MiddleOfAnimation)
+            {
+                // Don't navigate away yet
+                return;
+            }
+            BusyStatus.IsBusy = false;
         }
 
 
@@ -794,6 +822,13 @@ namespace KissMachineKinect
                         _photoTaken = false;
                         return;
                     case (int)KissCountdownStatusService.SpecialKissTexts.Kiss:
+                        if (BusyStatus.IsBusy)
+                        {
+                            // Still downloading photo? -> keep short 1.5s timer active and do not start
+                            // 10 seconds show photo timer yet...
+                            Debug.WriteLine("App is busy - do not set to PhotoTaken yet...");
+                            return;
+                        }
                         // Stop kiss countdown timer
                         await StopKissPhotoTimer(false);
                         // Set countdown timer to clear picture from screen after 10 seconds
@@ -826,20 +861,33 @@ namespace KissMachineKinect
 
         private async Task TakePhoto()
         {
+            IncreasePhotoCounter();
             try
             {
                 // Try to take the picture with the connected Sony camera
+                Debug.WriteLine("Set to busy - downloading photo ...");
+                BusyStatus.SetBusy(_resourceLoader.GetString("DownloadingPhoto"));
+                await Task.Delay(10);
                 var photoFile = await _sonyCameraService.TakePhoto();
                 await LoadFileToViewfinderBitmap(photoFile);
             }
             catch (Exception e)
             {
                 Debug.WriteLine("Failed taking photo with camera: " + e);
-                // Take photo with Kinect if Camera fails.
+                // Store current image from Kinect if Camera fails.
                 await SavePhotoToFile(_bitmap);
                 TakenPhotoBitmap = _bitmap;
                 TakenPhotoBitmap.Invalidate();
             }
+            // Outside of try/catch to end it even if issues with Camera download
+            BusyStatus.EndBusy(BusyStatus.BusyEndTypes.Fadeout);
+        }
+
+        private void IncreasePhotoCounter()
+        {
+            var counterValue = ApplicationData.Current.RoamingSettings.Values[PhotoCounterSettingName] as int?;
+            ApplicationData.Current.RoamingSettings.Values[PhotoCounterSettingName] = counterValue != null ? counterValue + 1 : 1;
+            PhotoCounter = (int)ApplicationData.Current.RoamingSettings.Values[PhotoCounterSettingName];
         }
 
         private async Task LoadFileToViewfinderBitmap(StorageFile photoFileName)

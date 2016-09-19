@@ -132,6 +132,7 @@
     <Compile Include="Controls\BusyControl.xaml.cs">
       <DependentUpon>BusyControl.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Controls\DelegateCommand.cs" />
     <Compile Include="Converter\BoolToVisibilityConverter.cs" />
     <Compile Include="Converter\CameraStatusToBrushConverter.cs" />
     <Compile Include="Converter\CountdownIntToStringConverter.cs" />

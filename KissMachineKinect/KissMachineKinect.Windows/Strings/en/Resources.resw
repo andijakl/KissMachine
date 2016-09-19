@@ -135,6 +135,9 @@
   <data name="BusyLoading" xml:space="preserve">
     <value>Loading ...</value>
   </data>
+  <data name="DownloadingPhoto" xml:space="preserve">
+    <value>Please wait - transmitting photo ...</value>
+  </data>
   <data name="ErrorNoKinectAvailableText" xml:space="preserve">
     <value>No Kinect v2 sensor is available on your system. Make sure the Kinect is connected, powered up and the drivers are installed.</value>
   </data>

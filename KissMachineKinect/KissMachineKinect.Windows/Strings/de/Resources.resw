@@ -135,6 +135,9 @@
   <data name="BusyLoading" xml:space="preserve">
     <value>Lade ...</value>
   </data>
+  <data name="DownloadingPhoto" xml:space="preserve">
+    <value>Bitte warten - Übertrage das Foto ...</value>
+  </data>
   <data name="ErrorNoKinectAvailableText" xml:space="preserve">
     <value>Konnte keinen Kinect v2 Sensor finden. Stelle sicher, dass die Kinect an den PC angesteckt, mit Strom versorgt ist und dass die Treiber installiert sind (inkl. einem laufenden KinectMonitor-Service).</value>
   </data>

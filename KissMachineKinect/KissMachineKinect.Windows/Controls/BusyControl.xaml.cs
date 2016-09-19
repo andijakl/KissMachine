@@ -70,7 +70,6 @@ namespace KissMachineKinect.Controls
         {
             InitializeComponent();
             LayoutRoot.DataContext = this;
-            Debug.WriteLine("Busy control constructor");
         }
 
 
@@ -96,7 +95,6 @@ namespace KissMachineKinect.Controls
 
         public static void BusyEndPropertyChanged(DependencyObject obj, DependencyPropertyChangedEventArgs e)
         {
-            // TODO: gets called multiple times when navigating from choose task to select event and then back again
             ((BusyControl)obj).EndBusy(e);
         }
 
@@ -188,10 +186,7 @@ namespace KissMachineKinect.Controls
 
         private void TriggerBusyEndedCommand(BusyStatus.BusyEndedTypes busyEndedType)
         {
-            if (BusyEndedCommand != null)
-            {
-                BusyEndedCommand.Execute(busyEndedType);
-            }
+            BusyEndedCommand?.Execute(busyEndedType);
         }
     }
 }
