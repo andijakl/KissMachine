@@ -12,7 +12,6 @@ using Windows.ApplicationModel.Resources;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
-using Windows.Storage.Streams;
 using Windows.System;
 using Windows.UI;
 using Windows.UI.Core;
@@ -44,7 +43,7 @@ namespace KissMachineKinect
         private const float TriggerKissCountdownDistanceInM = 0.3f;
 
         private const double CountdownSpeedInS = 1.5;
-        private const int CountdownStartValue = 5;
+        private const int CountdownStartValue = 3;
         private const int ClearPictureSpeedInS = 10;
 
         // Screenshots
@@ -82,7 +81,7 @@ namespace KissMachineKinect
         // UI
         private MinPlayerLine _minPlayerLine;
         private Timer _photoCountdownTimer;
-        private int LowPerformanceFrameCounter = 0;
+        private int _lowPerformanceFrameCounter;
 
         private int _photoCountDown = (int)KissCountdownStatusService.SpecialKissTexts.Invisible;
         public int PhotoCountDown
@@ -320,8 +319,6 @@ namespace KissMachineKinect
 
         #endregion
 
-
-
         #region Kinect Init
         private void InitKinect()
         {
@@ -462,8 +459,8 @@ namespace KissMachineKinect
             if (ShowTakenPhoto) return;
             if (LowPerformanceMode)
             {
-                LowPerformanceFrameCounter++;
-                if (LowPerformanceFrameCounter%2 != 0) return;
+                _lowPerformanceFrameCounter++;
+                if (_lowPerformanceFrameCounter%2 != 0) return;
             }
 
             var colorFrameProcessed = false;
@@ -617,6 +614,7 @@ namespace KissMachineKinect
 
         #endregion
 
+        #region Player Detection & Calculations
         /// <summary>
         /// Handles the body frame data arriving from the sensor
         /// </summary>
@@ -774,6 +772,7 @@ namespace KissMachineKinect
                 player.SetPosition(facePosInCamera, facePosInColor);
             }
         }
+        #endregion
 
         #region Photo Countdown
 

@@ -159,6 +159,12 @@ namespace KissMachineKinect.Services
         {
             var camStatus = await _camera.GetEventAsync(false, CameraApiVersion);
             Debug.WriteLine("Camera status: " + camStatus.CameraStatus);
+            var postViewImageSizeList = await _camera.GetPostviewImageSizeAsync();
+            Debug.WriteLine("Postview Image sizes:");
+            foreach (var curSize in postViewImageSizeList)
+            {
+                Debug.WriteLine(curSize);
+            }
             return camStatus;
         }
         #endregion
