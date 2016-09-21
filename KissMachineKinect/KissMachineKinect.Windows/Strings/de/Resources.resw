@@ -198,4 +198,7 @@
   <data name="MinDistanceText" xml:space="preserve">
     <value>Minimale Distanz [m]: {0:0.00}</value>
   </data>
+  <data name="RemovedMinPairPlayerHint" xml:space="preserve">
+    <value>Ich kann euch nicht mehr sehen! Falls ihr euch zu stürmisch umarmt, kann ich euch nicht mehr so gut erkennen.</value>
+  </data>
 </root>

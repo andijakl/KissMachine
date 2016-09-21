@@ -39,7 +39,7 @@ namespace KissMachineKinect
         private const bool LowPerformanceMode = true;
 
         // Distance config
-        private const float ShowHintKissDistanceInM = 0.6f;
+        private const float ShowHintKissDistanceInM = 1.0f;
         private const float TriggerKissCountdownDistanceInM = 0.3f;
 
         private const double CountdownSpeedInS = 1.5;
@@ -79,6 +79,7 @@ namespace KissMachineKinect
         private List<PlayerInfo> _players;
 
         // UI
+        public KissPositionModel _minPair { get; set; }
         private MinPlayerLine _minPlayerLine;
         private Timer _photoCountdownTimer;
         private int _lowPerformanceFrameCounter;
@@ -588,13 +589,25 @@ namespace KissMachineKinect
         private async Task RemovePlayer(ulong trackingId, int bodyNum)
         {
             if (_players == null || !_players.Any()) return;
-            var playerToRemove = _players.FirstOrDefault(playerInfo => playerInfo.BodyNum == bodyNum);
+            var playerToRemove = _players.FirstOrDefault(playerInfo => playerInfo.TrackingId == trackingId);
             if (playerToRemove != null)
             {
                 Debug.WriteLine("Remove player: " + bodyNum + " / id: " + trackingId);
+                if (_minPair != null && (_minPair.Player1TrackingId == trackingId ||
+                                         _minPair.Player2TrackingId == trackingId))
+                {
+                    // Removing one of the players that is part of the minimum pair!
+                    if (IsInCountdownPhase() && _speechService != null)
+                    {
+                        await _speechService.SpeakTextAsync(_resourceLoader.GetString("RemovedMinPairPlayerHint"));
+                    }
+                    _minPair = null;
+                    _minPlayerLine?.SetVisibility(false);
+                }
                 DoRemovePlayer(playerToRemove);
                 if (_players.Count < 2)
                 {
+                    // If less than two players are left...
                     _photoTaken = false;
                     await StopKissPhotoTimer();
                 }
@@ -658,14 +671,14 @@ namespace KissMachineKinect
                 return;
             }
 
-            var minPair = CheckPlayersCloseBy();
-            if (minPair != null)
+            _minPair = CheckPlayersCloseBy();
+            if (_minPair != null)
             {
-                if (minPair.DistanceInM < ShowHintKissDistanceInM)
+                if (_minPair.DistanceInM < ShowHintKissDistanceInM)
                 {
                     // Draw line between heads
-                    _minPlayerLine.SetPosition(minPair.Player1Pos.X, minPair.Player1Pos.Y, minPair.Player2Pos.X,
-                        minPair.Player2Pos.Y);
+                    _minPlayerLine.SetPosition(_minPair.Player1Pos.X, _minPair.Player1Pos.Y, _minPair.Player2Pos.X,
+                        _minPair.Player2Pos.Y);
                     _minPlayerLine.SetVisibility(true);
                 }
                 else
@@ -675,7 +688,7 @@ namespace KissMachineKinect
                 }
 
                 // Trigger or stop photo?
-                if (minPair.DistanceInM < TriggerKissCountdownDistanceInM && !_photoTaken)
+                if (_minPair.DistanceInM < TriggerKissCountdownDistanceInM && !_photoTaken)
                 {
                     // Start kiss timer?
                     await StartKissPhotoTimer();
@@ -688,14 +701,14 @@ namespace KissMachineKinect
                     {
                         await StopKissPhotoTimer(false);
                     }
-                    if (minPair.DistanceInM > ShowHintKissDistanceInM)
+                    if (_minPair.DistanceInM > ShowHintKissDistanceInM)
                     {
                         _photoTaken = false;
                     }
                 }
 
                 if (_photoCountdownTimer == null &&
-                    minPair.DistanceInM < ShowHintKissDistanceInM &&
+                    _minPair.DistanceInM < ShowHintKissDistanceInM &&
                     !_photoTaken && !ShowTakenPhoto)
                 {
                     // Show hint to kiss
@@ -710,11 +723,10 @@ namespace KissMachineKinect
         }
 
 
+
         private KissPositionModel CheckPlayersCloseBy()
         {
             if (_players == null) return null;
-
-            // Real code
             if (_players.Count < 2) return null;
 
             // Iterate over all players
@@ -733,7 +745,11 @@ namespace KissMachineKinect
                         foundMinPairDistance = true;
                         minPair.DistanceInM = dist;
                         minPair.Player1Pos = _players[i].FacePosInColor;
+                        minPair.Player1BodyNum = _players[i].BodyNum;
+                        minPair.Player1TrackingId = _players[i].TrackingId;
                         minPair.Player2Pos = _players[j].FacePosInColor;
+                        minPair.Player2BodyNum = _players[j].BodyNum;
+                        minPair.Player2TrackingId = _players[j].TrackingId;
                     }
                 }
             }
@@ -852,10 +868,11 @@ namespace KissMachineKinect
                 }
             });
         }
-
+        
         private bool IsInCountdownPhase()
         {
-            return PhotoCountDown >= 0 && PhotoCountDown < (int)KissCountdownStatusService.SpecialKissTexts.AnotherPhoto;
+            return PhotoCountDown >= (int)KissCountdownStatusService.SpecialKissTexts.Kiss &&
+                   PhotoCountDown <= CountdownStartValue;
         }
 
         private async Task TakePhoto()

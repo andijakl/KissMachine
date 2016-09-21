@@ -198,4 +198,7 @@
   <data name="MinDistanceText" xml:space="preserve">
     <value>Minimum distance [m]: {0:0.00}</value>
   </data>
+  <data name="RemovedMinPairPlayerHint" xml:space="preserve">
+    <value>I can't see you anymore! If you are hugging each other with too much enthusiasm, I sometimes have issues recognizing you.</value>
+  </data>
 </root>
