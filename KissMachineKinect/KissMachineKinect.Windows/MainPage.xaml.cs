@@ -636,7 +636,14 @@ namespace KissMachineKinect
                     // Do not await this statement, as it would cause Kinect to call this
                     // Method many times until the speech service is finished.
 #pragma warning disable 4014
-                    _speechService?.SpeakTextAsync(_resourceLoader.GetString("RemovedMinPairPlayerHint"));
+                    try
+                    {
+                        _speechService?.SpeakTextAsync(_resourceLoader.GetString("RemovedMinPairPlayerHint"));
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine("Exception when speaking hint: " + ex);
+                    }
 #pragma warning restore 4014
                 }
             }
@@ -663,90 +670,98 @@ namespace KissMachineKinect
         /// <param name="args">event arguments</param>
         private async void Reader_BodyFrameArrived(BodyFrameReader sender, BodyFrameArrivedEventArgs args)
         {
-            using (var bodyFrame = args.FrameReference.AcquireFrame())
+            try
             {
-                if (bodyFrame == null) return;
-
-                // update body data
-                bodyFrame.GetAndRefreshBodyData(_bodies);
-            }
-
-
-            for (var i = 0; i < _bodies.Length; i++)
-            {
-                var curBody = _bodies[i];
-                if (curBody.IsTracked)
+                using (var bodyFrame = args.FrameReference.AcquireFrame())
                 {
-                    // Check if we have already registered this player
-                    if (!IsPlayerTracked(curBody.TrackingId))
+                    if (bodyFrame == null) return;
+
+                    // update body data
+                    bodyFrame.GetAndRefreshBodyData(_bodies);
+                }
+
+
+                for (var i = 0; i < _bodies.Length; i++)
+                {
+                    var curBody = _bodies[i];
+                    if (curBody.IsTracked)
                     {
-                        CreateNewPlayer(curBody.TrackingId, i);
+                        // Check if we have already registered this player
+                        if (!IsPlayerTracked(curBody.TrackingId))
+                        {
+                            CreateNewPlayer(curBody.TrackingId, i);
+                        }
+                        // Update player position
+                        UpdatePlayer(curBody);
                     }
-                    // Update player position
-                    UpdatePlayer(curBody);
+                    else
+                    {
+                        // collapse this body from canvas as it goes out of view
+                        await RemovePlayer(curBody.TrackingId, i);
+                    }
                 }
-                else
-                {
-                    // collapse this body from canvas as it goes out of view
-                    await RemovePlayer(curBody.TrackingId, i);
-                }
-            }
 
-            // Check if two players are close enough
-            if (ShowTakenPhoto || _photoTaken)
-            {
-                _minPlayerLine.SetVisibility(false);
-                return;
-            }
-
-            _minPair = CheckPlayersCloseBy();
-            if (_minPair != null)
-            {
-                if (_minPair.DistanceInM < ShowHintKissDistanceInM)
+                // Check if two players are close enough
+                if (ShowTakenPhoto || _photoTaken)
                 {
-                    // Draw line between heads
-                    _minPlayerLine.SetPosition(_minPair.Player1Pos.X, _minPair.Player1Pos.Y, _minPair.Player2Pos.X,
-                        _minPair.Player2Pos.Y);
-                    _minPlayerLine.SetVisibility(true);
-                }
-                else
-                {
-                    // Players are too far apart
                     _minPlayerLine.SetVisibility(false);
+                    return;
                 }
 
-                // Trigger or stop photo?
-                if (_minPair.DistanceInM < TriggerKissCountdownDistanceInM && !_photoTaken)
+                _minPair = CheckPlayersCloseBy();
+                if (_minPair != null)
                 {
-                    // Start kiss timer?
-                    await StartKissPhotoTimer();
+                    if (_minPair.DistanceInM < ShowHintKissDistanceInM)
+                    {
+                        // Draw line between heads
+                        _minPlayerLine.SetPosition(_minPair.Player1Pos.X, _minPair.Player1Pos.Y, _minPair.Player2Pos.X,
+                            _minPair.Player2Pos.Y);
+                        _minPlayerLine.SetVisibility(true);
+                    }
+                    else
+                    {
+                        // Players are too far apart
+                        _minPlayerLine.SetVisibility(false);
+                    }
+
+                    // Trigger or stop photo?
+                    if (_minPair.DistanceInM < TriggerKissCountdownDistanceInM && !_photoTaken)
+                    {
+                        // Start kiss timer?
+                        await StartKissPhotoTimer();
+                    }
+                    else
+                    {
+                        // Stop timer if it was running and reset if a photo was already taken
+                        // (people have to get away from each other to start another photo)
+                        if (IsInCountdownPhase())
+                        {
+                            await StopKissPhotoTimer(false);
+                        }
+                        if (_minPair.DistanceInM > ShowHintKissDistanceInM)
+                        {
+                            _photoTaken = false;
+                        }
+                    }
+
+                    if (_photoCountdownTimer == null &&
+                        _minPair.DistanceInM < ShowHintKissDistanceInM &&
+                        !_photoTaken && !ShowTakenPhoto)
+                    {
+                        // Show hint to kiss
+                        await SetCountdown((int) KissCountdownStatusService.SpecialKissTexts.GiveAKiss);
+                    }
                 }
                 else
                 {
-                    // Stop timer if it was running and reset if a photo was already taken
-                    // (people have to get away from each other to start another photo)
-                    if (IsInCountdownPhase())
-                    {
-                        await StopKissPhotoTimer(false);
-                    }
-                    if (_minPair.DistanceInM > ShowHintKissDistanceInM)
-                    {
-                        _photoTaken = false;
-                    }
+                    // Remove line if we don't have a pair
+                    _minPlayerLine?.SetVisibility(false);
                 }
 
-                if (_photoCountdownTimer == null &&
-                    _minPair.DistanceInM < ShowHintKissDistanceInM &&
-                    !_photoTaken && !ShowTakenPhoto)
-                {
-                    // Show hint to kiss
-                    await SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.GiveAKiss);
-                }
             }
-            else
+            catch (Exception ex)
             {
-                // Remove line if we don't have a pair
-                _minPlayerLine?.SetVisibility(false);
+                Debug.WriteLine("Exception processing frame! " + ex);
             }
         }
 
