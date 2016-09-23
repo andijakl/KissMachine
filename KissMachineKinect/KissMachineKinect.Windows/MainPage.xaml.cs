@@ -227,6 +227,7 @@ namespace KissMachineKinect
 
         private void InitCamera()
         {
+            if (!UseSonyCamera) return;
             if (_sonyCameraService == null)
             {
                 _sonyCameraService = new SonyCameraService();
@@ -274,7 +275,10 @@ namespace KissMachineKinect
             DataContext = this;
 
             InitCamera();
-            _sonyCameraService?.ForceRestart();
+            if (UseSonyCamera)
+            {
+                _sonyCameraService?.ForceRestart();
+            }
 
             if (_speechService == null)
             {
@@ -291,8 +295,11 @@ namespace KissMachineKinect
 
             _speechService?.Suspend();
 
-            _sonyCameraService?.StopCameraSearch();
-            _sonyCameraService?.Suspend();
+            if (UseSonyCamera)
+            {
+                _sonyCameraService?.StopCameraSearch();
+                _sonyCameraService?.Suspend();
+            }
 
             // Body is IDisposables
             if (_bodies != null)
@@ -604,14 +611,15 @@ namespace KissMachineKinect
             var playerToRemove = _players.FirstOrDefault(playerInfo => playerInfo.BodyNum == bodyNum);
             if (playerToRemove != null)
             {
+                var speakRemovedMinPairPlayerHint = false;
                 Debug.WriteLine("Remove player: " + playerToRemove.BodyNum + " / id: " + playerToRemove.TrackingId);
                 if (_minPair != null && (_minPair.Player1TrackingId == playerToRemove.TrackingId ||
                                          _minPair.Player2TrackingId == playerToRemove.TrackingId))
                 {
                     // Removing one of the players that is part of the minimum pair!
-                    if (IsInCountdownPhase() && _speechService != null)
+                    if (IsInCountdownPhase())
                     {
-                        await _speechService.SpeakTextAsync(_resourceLoader.GetString("RemovedMinPairPlayerHint"));
+                        speakRemovedMinPairPlayerHint = true;
                     }
                     _minPair = null;
                     _minPlayerLine?.SetVisibility(false);
@@ -622,6 +630,14 @@ namespace KissMachineKinect
                     // If less than two players are left...
                     _photoTaken = false;
                     await StopKissPhotoTimer();
+                }
+                if (speakRemovedMinPairPlayerHint)
+                {
+                    // Do not await this statement, as it would cause Kinect to call this
+                    // Method many times until the speech service is finished.
+#pragma warning disable 4014
+                    _speechService?.SpeakTextAsync(_resourceLoader.GetString("RemovedMinPairPlayerHint"));
+#pragma warning restore 4014
                 }
             }
         }
@@ -981,7 +997,19 @@ namespace KissMachineKinect
             {
                 // Set to invisible
                 await SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.Invisible);
-                await _sonyCameraService.PutCameraToSleep();
+                if (UseSonyCamera)
+                {
+                    try
+                    {
+                        await _sonyCameraService.PutCameraToSleep();
+                    }
+                    catch (Exception ex)
+                    {
+                        // Ignore this error for the self-service use case. Doesn't matter so much
+                        // if camera doesn't go to sleep in one case, if it succeeds taking photos.
+                        Debug.WriteLine("Failed putting camera to sleep: " + ex);
+                    }
+                }
             }
         }
         
