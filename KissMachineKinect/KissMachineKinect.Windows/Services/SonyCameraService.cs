@@ -152,19 +152,21 @@ namespace KissMachineKinect.Services
             _camera = new CameraApiClient(new Uri(endpoints["camera"]));
             CameraStatus = CameraStatusValues.Connected;
             StopCameraSearch();
-            await GetCameraStatusAsync();
+            try
+            {
+                await GetCameraStatusAsync();
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("Error getting camera status after device discovery: " + ex);
+                // Otherwise, ignore the error for now, maybe it was just too fast for the camera
+            }
         }
 
         private async Task<Event> GetCameraStatusAsync()
         {
             var camStatus = await _camera.GetEventAsync(false, CameraApiVersion);
             Debug.WriteLine("Camera status: " + camStatus.CameraStatus);
-            var postViewImageSizeList = await _camera.GetPostviewImageSizeAsync();
-            Debug.WriteLine("Postview Image sizes:");
-            foreach (var curSize in postViewImageSizeList)
-            {
-                Debug.WriteLine(curSize);
-            }
             return camStatus;
         }
         #endregion
@@ -188,6 +190,24 @@ namespace KissMachineKinect.Services
                     CameraStatus = CameraStatusValues.RecMode;
                     Debug.WriteLine("Camera rec mode started");
                 }
+
+                // Set still size is not supported by RX100 yet
+                // Make sure to insert a memory card, otherwise the cam will only record 2M images!
+                // With a memory card, the camera will in any case save the full size photo to the card
+                // The postview image determines what size is transferred after taking the photo.
+                // With a memory card, that should be 2M or Original. In most tests even with a memory
+                // card, the camera only offered 2M. But, that's anyway better for this use case, as
+                // trasferring a 20M pixel takes several seconds, and we don't want guests to wait that long.
+                // Therefore, transffering a 2M postview image is fine, if you then take the pics from the
+                // memory card in the camera.
+                //var postviewImageSize = await _camera.GetPostviewImageSizeAsync();
+                //Debug.WriteLine("Postview image size: " + postviewImageSize);
+                //var availableSizes = await _camera.GetAvailablePostviewImageSizeAsync();
+                //foreach (var curSize in availableSizes.Candidates)
+                //{
+                //    Debug.WriteLine("Available: " + curSize);
+                //}
+                //Debug.WriteLine("Current: " + availableSizes.Current);
             }
             catch (RemoteApiException ex)
             {
@@ -213,7 +233,7 @@ namespace KissMachineKinect.Services
         public async Task<StorageFile> TakePhoto()
         {
             if (_camera == null) return null;
-
+            
             Debug.WriteLine("Take photo");
             var picUrls = await _camera.ActTakePictureAsync();
 

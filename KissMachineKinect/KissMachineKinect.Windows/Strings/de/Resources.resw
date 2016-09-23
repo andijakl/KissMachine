@@ -144,6 +144,12 @@
   <data name="ErrorNoKinectAvailableTitle" xml:space="preserve">
     <value>Kinect nicht gefunden</value>
   </data>
+  <data name="ErrorSavingPhotoFromKinectText" xml:space="preserve">
+    <value>Konnte das Foto nicht speichern. Bitte versucht es noch einmal, oder meldet das Problem sonst an den Verantwortlichen! </value>
+  </data>
+  <data name="ErrorSavingPhotoFromKinectTitle" xml:space="preserve">
+    <value>Fehler beim Speichern des Fotos</value>
+  </data>
   <data name="GiveAKiss_00" xml:space="preserve">
     <value>Gebt euch ein Bussi!</value>
   </data>

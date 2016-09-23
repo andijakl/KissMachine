@@ -144,6 +144,12 @@
   <data name="ErrorNoKinectAvailableTitle" xml:space="preserve">
     <value>Kinect not found</value>
   </data>
+  <data name="ErrorSavingPhotoFromKinectText" xml:space="preserve">
+    <value>Could not save the photo. Please try again, or if the issue persists, please contact an operator! </value>
+  </data>
+  <data name="ErrorSavingPhotoFromKinectTitle" xml:space="preserve">
+    <value>Error Saving Photo</value>
+  </data>
   <data name="GiveAKiss_00" xml:space="preserve">
     <value>Kiss each other!</value>
   </data>

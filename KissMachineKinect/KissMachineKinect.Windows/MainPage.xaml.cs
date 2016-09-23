@@ -37,6 +37,7 @@ namespace KissMachineKinect
     {
         // General config
         private const bool LowPerformanceMode = true;
+        private const bool UseSonyCamera = true;
 
         // Distance config
         private const float ShowHintKissDistanceInM = 1.0f;
@@ -503,6 +504,7 @@ namespace KissMachineKinect
             {
                 case VirtualKey.Space:
                     // Take screenshot when releasing the space key
+                    if (UseSonyCamera && _sonyCameraService != null) await _sonyCameraService.PrepareTakePhoto();
                     await TakePhoto();
                     break;
                 case VirtualKey.D:
@@ -515,10 +517,17 @@ namespace KissMachineKinect
                     // Reset all players
                     await ResetAllPlayersAsync();
                     break;
+                case VirtualKey.C:
+                    // Counter -> clear
+                    PhotoCounter = 0;
+                    ApplicationData.Current.RoamingSettings.Values[PhotoCounterSettingName] = 0;
+                    Debug.WriteLine("Photo counter reset");
+                    break;
                 case VirtualKey.A:
                     {
 //#if DEBUG
                         // Add new player (for debug)
+                        Debug.WriteLine("Simulated player added");
                         var newPlayer = new PlayerInfo(_drawingCanvas, 1, -1)
                         {
                             FacePosInCamera = new CameraSpacePoint { X = -0.0366f, Y = -0.0486f, Z = 1.164f },
@@ -589,12 +598,15 @@ namespace KissMachineKinect
         private async Task RemovePlayer(ulong trackingId, int bodyNum)
         {
             if (_players == null || !_players.Any()) return;
-            var playerToRemove = _players.FirstOrDefault(playerInfo => playerInfo.TrackingId == trackingId);
+            //Debug.WriteLine("Attempt to remove player: " + trackingId);
+            // We need to use the body number here instead of the tracking id, as
+            // the tracking ID is already cleared by Kinect when it lost the body
+            var playerToRemove = _players.FirstOrDefault(playerInfo => playerInfo.BodyNum == bodyNum);
             if (playerToRemove != null)
             {
-                Debug.WriteLine("Remove player: " + bodyNum + " / id: " + trackingId);
-                if (_minPair != null && (_minPair.Player1TrackingId == trackingId ||
-                                         _minPair.Player2TrackingId == trackingId))
+                Debug.WriteLine("Remove player: " + playerToRemove.BodyNum + " / id: " + playerToRemove.TrackingId);
+                if (_minPair != null && (_minPair.Player1TrackingId == playerToRemove.TrackingId ||
+                                         _minPair.Player2TrackingId == playerToRemove.TrackingId))
                 {
                     // Removing one of the players that is part of the minimum pair!
                     if (IsInCountdownPhase() && _speechService != null)
@@ -800,7 +812,20 @@ namespace KissMachineKinect
             _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(CountdownSpeedInS), TimeSpan.FromSeconds(CountdownSpeedInS));
 
             // Prepare camera for taking a photo
-            await _sonyCameraService.PrepareTakePhoto();
+            if (UseSonyCamera)
+            {
+                try
+                {
+                    await _sonyCameraService.PrepareTakePhoto();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("Error preparing camera: " + ex);
+                    // Ignore the error for now, let's hope taking a photo will work without preparation as well.
+                    // Otherwise, error will be handled during capture, which is better UX than showing an error
+                    // already now.
+                }
+            }
         }
 
 
@@ -878,22 +903,39 @@ namespace KissMachineKinect
         private async Task TakePhoto()
         {
             IncreasePhotoCounter();
-            try
+            var takePhotoWithCam = UseSonyCamera;
+            if (UseSonyCamera)
             {
-                // Try to take the picture with the connected Sony camera
-                Debug.WriteLine("Set to busy - downloading photo ...");
-                BusyStatus.SetBusy(_resourceLoader.GetString("DownloadingPhoto"));
-                await Task.Delay(10);
-                var photoFile = await _sonyCameraService.TakePhoto();
-                await LoadFileToViewfinderBitmap(photoFile);
+                try
+                {
+                    // Try to take the picture with the connected Sony camera
+                    Debug.WriteLine("Set to busy - downloading photo ...");
+                    BusyStatus.SetBusy(_resourceLoader.GetString("DownloadingPhoto"));
+                    await Task.Delay(10);
+                    var photoFile = await _sonyCameraService.TakePhoto();
+                    await LoadFileToViewfinderBitmap(photoFile);
+                }
+                catch (Exception e)
+                {
+                    Debug.WriteLine("Failed taking photo with camera: " + e);
+                    takePhotoWithCam = false;
+                }
             }
-            catch (Exception e)
+            if (!takePhotoWithCam)
             {
-                Debug.WriteLine("Failed taking photo with camera: " + e);
-                // Store current image from Kinect if Camera fails.
-                await SavePhotoToFile(_bitmap);
-                TakenPhotoBitmap = _bitmap;
-                TakenPhotoBitmap.Invalidate();
+                try
+                {
+                    // Store current image from Kinect if Camera fails.
+                    await SavePhotoToFile(_bitmap);
+                    TakenPhotoBitmap = _bitmap;
+                    TakenPhotoBitmap.Invalidate();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("Error saving photo from Kinect: " + ex);
+                    await ShowMessageBoxAsync(_resourceLoader.GetString("ErrorSavingPhotoFromKinectText"),
+                        _resourceLoader.GetString("ErrorSavingPhotoFromKinectTitle"));
+                }
             }
             // Outside of try/catch to end it even if issues with Camera download
             BusyStatus.EndBusy(BusyStatus.BusyEndTypes.Fadeout);
