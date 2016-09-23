@@ -69,7 +69,7 @@
         <StackPanel Orientation="Horizontal" Grid.Row="4" Grid.Column="0" HorizontalAlignment="Right" VerticalAlignment="Bottom" >
             <TextBlock Text="{Binding PhotoCounter}" 
                        Visibility="{Binding ShowTakenPhoto, Converter={StaticResource BoolToVisibilityConverter}}"
-                       Foreground="White" FontSize="40" FontFamily="Gabriola" VerticalAlignment="Center" />
+                       Foreground="White" FontSize="30" FontFamily="Gabriola" VerticalAlignment="Center" TextLineBounds="TrimToBaseline" />
             <SymbolIcon Symbol="AttachCamera" Width="30" Height="30"
                         Foreground="{Binding CameraStatus, Converter={StaticResource CameraStatusToBrushConverter},Mode=OneWay}" Margin="10"/>
 
