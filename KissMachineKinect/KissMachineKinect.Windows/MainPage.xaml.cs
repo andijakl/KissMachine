@@ -47,7 +47,7 @@ namespace KissMachineKinect
         private const FileFormat DefaultPhotoFileFormat = FileFormat.Png;
         private const string DefaultPhotoFileName = "kiss_{0:yyyy-MM-dd_HH-mm-ss}";
         private readonly StorageFolder _defaultPhotoFolder = KnownFolders.PicturesLibrary;
-        private const string DefaultPhotoSubFolder = "Wedding";
+        private const string DefaultPhotoSubFolder = "KissMachine";
 
         private enum FileFormat
         {
@@ -528,7 +528,7 @@ namespace KissMachineKinect
                     break;
                 case VirtualKey.A:
                     {
-//#if DEBUG
+#if DEBUG
                         // Add new player (for debug)
                         Debug.WriteLine("Simulated player added");
                         var newPlayer = new PlayerInfo(_drawingCanvas, 1, -1)
@@ -538,7 +538,7 @@ namespace KissMachineKinect
                         };
                         newPlayer.SetVisibility(true);
                         _players.Add(newPlayer);
-//#endif
+#endif
                     }
                     break;
             }

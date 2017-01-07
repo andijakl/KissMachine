@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Package xmlns="http://schemas.microsoft.com/appx/2010/manifest" xmlns:m2="http://schemas.microsoft.com/appx/2013/manifest">
-  <Identity Name="Mopius.KissMachine" Publisher="CN=6E128446-EF20-4FF3-9CCB-70D21ABFFD15" Version="1.1.0.5" />
+  <Identity Name="Mopius.KissMachine" Publisher="CN=6E128446-EF20-4FF3-9CCB-70D21ABFFD15" Version="1.1.0.6" />
   <Properties>
     <DisplayName>Kiss Machine</DisplayName>
     <PublisherDisplayName>Jakl Andreas</PublisherDisplayName>
