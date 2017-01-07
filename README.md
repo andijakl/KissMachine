@@ -22,6 +22,7 @@ The Kinect camera is optimized for real-time image capturing with high frame rat
 Take the photo with a Sony camera connected to the PC via WiFi Direct (instead of using the Kinect). The camera is completely remote controlled by the app. Tested with the Sony DSC-RX100M3.
 
 Instructions:
+
 1. Start the Remote Control mode on the camera, e.g., via "Smart Remote Control", "Turn Wi-Fi on" or "Control with Smartphone".
 2. Connect the PC to the Wi-Fi of the camera.
 3. Start this "Kiss Machine" app.
@@ -33,4 +34,4 @@ The app does not collect any specific usage data. The captured photos are only s
 # License
 
 The complete source code of the app is available on GitHub under the open source GPL v3 license.
-For interacting with the Sony Camera Remote API, the app incorporates part of the [kz-remote-api](https://github.com/kazyx/kz-remote-api) library, released under MIT license.
+For interacting with the Sony Camera Remote API, the app incorporates part of the [kz-remote-api](https://github.com/kazyx/kz-remote-api) and the [kz-ssdp-discovery](https://github.com/kazyx/kz-ssdp-discovery) libraries developed by [kazyx](https://github.com/kazyx), released under MIT license.
