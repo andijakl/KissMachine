@@ -1,6 +1,7 @@
 ﻿using System;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.UI.ApplicationSettings;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 
@@ -24,10 +25,11 @@ namespace KissMachineKinect
             this.InitializeComponent();
             this.Suspending += this.OnSuspending;
 
-            var culture = new System.Globalization.CultureInfo("de-AT");
-            Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = culture.Name;
-            System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
-            System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
+            // Uncomment to force to German
+            //var culture = new System.Globalization.CultureInfo("de-AT");
+            //Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = culture.Name;
+            //System.Globalization.CultureInfo.DefaultThreadCurrentCulture = culture;
+            //System.Globalization.CultureInfo.DefaultThreadCurrentUICulture = culture;
         }
 
         /// <summary>
@@ -68,21 +70,6 @@ namespace KissMachineKinect
 
             if (rootFrame.Content == null)
             {
-#if WINDOWS_PHONE_APP
-                // Removes the turnstile navigation for startup.
-                if (rootFrame.ContentTransitions != null)
-                {
-                    this.transitions = new TransitionCollection();
-                    foreach (var c in rootFrame.ContentTransitions)
-                    {
-                        this.transitions.Add(c);
-                    }
-                }
-
-                rootFrame.ContentTransitions = null;
-                rootFrame.Navigated += this.RootFrame_FirstNavigated;
-#endif
-
                 // When the navigation stack isn't restored navigate to the first page,
                 // configuring the new page by passing required information as a navigation
                 // parameter
@@ -95,20 +82,7 @@ namespace KissMachineKinect
             // Ensure the current window is active
             Window.Current.Activate();
         }
-
-#if WINDOWS_PHONE_APP
-        /// <summary>
-        /// Restores the content transitions after the app has launched.
-        /// </summary>
-        /// <param name="sender">The object where the handler is attached.</param>
-        /// <param name="e">Details about the navigation event.</param>
-        private void RootFrame_FirstNavigated(object sender, NavigationEventArgs e)
-        {
-            var rootFrame = sender as Frame;
-            rootFrame.ContentTransitions = this.transitions ?? new TransitionCollection() { new NavigationThemeTransition() };
-            rootFrame.Navigated -= this.RootFrame_FirstNavigated;
-        }
-#endif
+        
 
         /// <summary>
         /// Invoked when application execution is being suspended.  Application state is saved
@@ -123,6 +97,23 @@ namespace KissMachineKinect
 
             // TODO: Save application state and stop any background activity
             deferral.Complete();
+        }
+
+        protected override void OnWindowCreated(WindowCreatedEventArgs args)
+        {
+            SettingsPane.GetForCurrentView().CommandsRequested += OnCommandsRequested;
+        }
+
+        private void OnCommandsRequested(SettingsPane sender, SettingsPaneCommandsRequestedEventArgs args)
+        {
+            args.Request.ApplicationCommands.Add(new SettingsCommand(
+                "About & Settings", "About & Settings", (handler) => ShowCustomSettingFlyout()));
+        }
+
+        public void ShowCustomSettingFlyout()
+        {
+            var customSettingFlyout = new AboutSettingsFlyout();
+            customSettingFlyout.Show();
         }
     }
 }

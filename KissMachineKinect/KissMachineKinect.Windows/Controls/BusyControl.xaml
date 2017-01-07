@@ -3,14 +3,14 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:converter1="using:KinectDemo.Converter"
-    xmlns:controls="using:KissMachineKinect.Controls"
-    mc:Ignorable="d"
+             xmlns:controls="using:KissMachineKinect.Controls"
+             xmlns:converter="using:KissMachineKinect.Converter"
+             mc:Ignorable="d"
     d:DesignHeight="480" d:DesignWidth="480" d:DataContext="{d:DesignInstance controls:BusyControl}">
 
     <UserControl.Resources>
 
-        <converter1:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+        <converter:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
         <!-- Checkmark symbol *************************************************************************************** -->
         <Storyboard x:Name="CheckmarkStoryboard">

@@ -1,0 +1,76 @@
+﻿<SettingsFlyout
+    x:Class="KissMachineKinect.AboutSettingsFlyout"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:KinectDemo"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    IconSource="Assets/Logo.scale-100.png"
+    Title="About"
+    DataContext="{Binding RelativeSource={RelativeSource Self}}"
+    d:DesignWidth="346">
+
+    <!-- This StackPanel acts as a root panel for vertical layout of the content sections -->
+    <StackPanel VerticalAlignment="Stretch" HorizontalAlignment="Stretch" >
+
+        <!-- The StackPanel(s) below define individual content sections -->
+
+        <!-- Content Section 1-->
+        <StackPanel Style="{StaticResource SettingsFlyoutSectionStyle}">
+
+            <!-- About header -->
+            <TextBlock x:Uid="About" Style="{StaticResource BigTitleStyle}" Margin="0, 30, 0, 10" />
+
+            <!-- About body -->
+            <TextBlock x:Uid="AboutText" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
+            <TextBlock x:Name="TextVersion" TextWrapping="Wrap" Style="{StaticResource BodyTextBlockStyle}"/>
+            <TextBlock x:Uid="AboutDevelopedBy" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
+
+            <!-- Website and Twitter links -->
+            <HyperlinkButton x:Uid="AboutTwitter" HorizontalAlignment="Left" Foreground="{StaticResource CustomAccentLightBrush}" Padding="-4,10,0,5"/>
+            <HyperlinkButton x:Uid="AboutGitHub" HorizontalAlignment="Left" Foreground="{StaticResource CustomAccentLightBrush}" Padding="-4,0,0,5"/>
+
+        </StackPanel>
+
+        <StackPanel Style="{StaticResource SettingsFlyoutSectionStyle}">
+
+            <!-- Description header -->
+            <TextBlock x:Uid="Description" Style="{StaticResource BigTitleStyle}" Margin="0, 30, 0, 10" />
+
+            <!-- Description body -->
+            <TextBlock x:Uid="DescriptionText" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
+
+        </StackPanel>
+
+        <StackPanel Style="{StaticResource SettingsFlyoutSectionStyle}">
+            <!-- Settings header -->
+            <TextBlock x:Uid="Settings" Style="{StaticResource BigTitleStyle}" Margin="0, 30, 0, 10" />
+
+            <!-- Settings body -->
+
+            <!-- Sony camera -->
+            <TextBlock x:Uid="SettingsSony" Style="{StaticResource MediumTitleStyle}" TextWrapping="Wrap" Margin="0, 15, 0, 0" />
+            <ToggleSwitch IsOn="{Binding SonyCameraEnabled, Mode=TwoWay}" Margin="0, 10, 0, 10"/>
+            <TextBlock x:Uid="SettingsSonyText" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
+            <HyperlinkButton x:Uid="SupportedCameras" HorizontalAlignment="Left" Foreground="{StaticResource CustomAccentLightBrush}" Padding="-4,10,0,5"/>
+
+            <!-- Low performance mode -->
+            <TextBlock x:Uid="SettingsLowPerformance" Style="{StaticResource MediumTitleStyle}" TextWrapping="Wrap" Margin="0, 30, 0, 0" />
+            <ToggleSwitch IsOn="{Binding LowPerformanceModeEnabled, Mode=TwoWay}" Margin="0, 10, 0, 10"/>
+            <TextBlock x:Uid="SettingsLowPerformanceText" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
+
+        </StackPanel>
+
+        <StackPanel Style="{StaticResource SettingsFlyoutSectionStyle}">
+            <!-- Privacy -->
+            <TextBlock x:Uid="Privacy" Style="{StaticResource BigTitleStyle}" Margin="0, 30, 0, 10" />
+            <TextBlock x:Uid="PrivacyText" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="Wrap"/>
+
+            <HyperlinkButton x:Uid="AboutGitHub" HorizontalAlignment="Left" Foreground="{StaticResource CustomAccentLightBrush}" Padding="-4,10,0,5"/>
+
+        </StackPanel>
+
+
+    </StackPanel>
+</SettingsFlyout>

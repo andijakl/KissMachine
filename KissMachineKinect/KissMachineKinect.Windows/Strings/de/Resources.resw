@@ -117,6 +117,27 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="About.Text" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="AboutDevelopedBy.Text" xml:space="preserve">
+    <value>Entwickelt von Andreas Jakl</value>
+  </data>
+  <data name="AboutGitHub.Content" xml:space="preserve">
+    <value>Projektwebseite auf GitHub</value>
+  </data>
+  <data name="AboutGitHub.NavigateUri" xml:space="preserve">
+    <value>https://github.com/andijakl/KissMachine</value>
+  </data>
+  <data name="AboutText.Text" xml:space="preserve">
+    <value>Bussi Maschine</value>
+  </data>
+  <data name="AboutTwitter.Content" xml:space="preserve">
+    <value>Auf Twitter folgen</value>
+  </data>
+  <data name="AboutTwitter.NavigateUri" xml:space="preserve">
+    <value>https://www.twitter.com/andijakl</value>
+  </data>
   <data name="AnotherPhoto_00" xml:space="preserve">
     <value>Ah, ihr wollt also noch ein Foto machen? Dann bleibt bitte noch kurz stehen...</value>
   </data>
@@ -134,6 +155,17 @@
   </data>
   <data name="BusyLoading" xml:space="preserve">
     <value>Lade ...</value>
+  </data>
+  <data name="Description.Text" xml:space="preserve">
+    <value>Beschreibung</value>
+  </data>
+  <data name="DescriptionText.Text" xml:space="preserve">
+    <value>Eine komplett automatisierte, Augmented Reality Photo-Booth!
+Für den Einsatz bei Hochzeiten und Parties konzipiert.
+
+Jede von der App erkannte Person wird mit einem Herz im Gesicht markiert. Kommen sich zwei Personen nahe genug, werden sie aufgefordert, sich ein Bussi zu geben. Es startet ein Countdown, danach wird ein Foto geschossen. Dieses wird im Bilder-Ordner gespeichert und zusätzlich für einige Sekunden angezeigt.
+
+Die App funktioniert komplett berührungslos: die Personen werden von der Kinect erkannt, Fotos werden im richtigen Moment automatisch gemacht. Die Interaktion mit den Personen erfolgt über Sprachausgabe und angezeigtem Text.</value>
   </data>
   <data name="DownloadingPhoto" xml:space="preserve">
     <value>Bitte warten - Übertrage das Foto ...</value>
@@ -204,7 +236,43 @@
   <data name="MinDistanceText" xml:space="preserve">
     <value>Minimale Distanz [m]: {0:0.00}</value>
   </data>
+  <data name="Privacy.Text" xml:space="preserve">
+    <value>Privatsphäre</value>
+  </data>
+  <data name="PrivacyText.Text" xml:space="preserve">
+    <value>Von der App werden keine spezifischen Nutzungsdaten erfasst und übertragen. Die aufgenommenen Fotos werden lediglich lokal auf Ihrem PC in der Foto-Bibliothek gespeichert. Bitte stellen Sie bei Veranstaltungen sicher, dass Sie die Erlaubnis Ihrer Gäste für die Aufnahme von Fotos haben. Der komplette Quellcode der App ist auf GitHub unter der Open Source GPL v3-Lizenz verfügbar.</value>
+  </data>
   <data name="RemovedMinPairPlayerHint" xml:space="preserve">
     <value>Ich kann euch nicht mehr sehen! Falls ihr euch zu stürmisch umarmt, kann ich euch nicht mehr so gut erkennen.</value>
+  </data>
+  <data name="ResourceLanguage" xml:space="preserve">
+    <value>de</value>
+  </data>
+  <data name="Settings.Text" xml:space="preserve">
+    <value>Einstellungen</value>
+  </data>
+  <data name="SettingsLowPerformance.Text" xml:space="preserve">
+    <value>Low Performance Modus</value>
+  </data>
+  <data name="SettingsLowPerformanceText.Text" xml:space="preserve">
+    <value>Bei schwachen PCs aktivieren. Hier werden weniger Bilder pro Sekunde angezeigt. Das verbessert die Verarbeitung, resultiert aber in einer langsameren Anzeige.</value>
+  </data>
+  <data name="SettingsSony.Text" xml:space="preserve">
+    <value>Sony Kamera verwenden</value>
+  </data>
+  <data name="SettingsSonyText.Text" xml:space="preserve">
+    <value>Foto mit einer per WiFi Direkt verbundenen Sony-Kamera statt der Kinect machen. Die Kamera wird dabei komplett von der App ferngesteuert. Getestet mit der Sony DSC-RX100M3.
+Achtung: nach dem Ändern dieser Einstellung die App neu starten! Die Kinect wird auf jeden Fall für den Live Stream und das Erkennen der Nutzer benötigt.
+
+Anweisungen:
+1. Auf der Kamera den Remote Control-Modus starten. z.B. über "Smart Remote Control", "Turn Wi-Fi on" oder "Control with Smartphone"
+2. Den PC mit dem Wi-Fi der Kamera verbinden
+3. "Bussi Maschine" starten</value>
+  </data>
+  <data name="SupportedCameras.Content" xml:space="preserve">
+    <value>Unterstützte Kameramodelle</value>
+  </data>
+  <data name="SupportedCameras.NavigateUri" xml:space="preserve">
+    <value>https://developer.sony.com/develop/cameras/device-support/</value>
   </data>
 </root>

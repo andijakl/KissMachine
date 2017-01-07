@@ -35,10 +35,6 @@ namespace KissMachineKinect
     /// </summary>
     public sealed partial class MainPage : Page, INotifyPropertyChanged
     {
-        // General config
-        private const bool LowPerformanceMode = true;
-        private const bool UseSonyCamera = true;
-
         // Distance config
         private const float ShowHintKissDistanceInM = 1.0f;
         private const float TriggerKissCountdownDistanceInM = 0.3f;
@@ -227,7 +223,7 @@ namespace KissMachineKinect
 
         private void InitCamera()
         {
-            if (!UseSonyCamera) return;
+            if (!SettingsService.SonyCameraEnabled) return;
             if (_sonyCameraService == null)
             {
                 _sonyCameraService = new SonyCameraService();
@@ -275,7 +271,7 @@ namespace KissMachineKinect
             DataContext = this;
 
             InitCamera();
-            if (UseSonyCamera)
+            if (SettingsService.SonyCameraEnabled)
             {
                 _sonyCameraService?.ForceRestart();
             }
@@ -284,18 +280,18 @@ namespace KissMachineKinect
             {
                 _speechService = new SpeechService(SpeakerMedia);
             }
-            _speechService.Init();
+            _resourceLoader = ResourceLoader.GetForCurrentView();
+            _speechService.Init(_resourceLoader.GetString("ResourceLanguage"));
 
         }
 
         protected override void OnNavigatedFrom(NavigationEventArgs e)
         {
             base.OnNavigatedFrom(e);
-            Debug.WriteLine("OnNavigatedFrom");
 
             _speechService?.Suspend();
 
-            if (UseSonyCamera)
+            if (SettingsService.SonyCameraEnabled)
             {
                 _sonyCameraService?.StopCameraSearch();
                 _sonyCameraService?.Suspend();
@@ -466,7 +462,7 @@ namespace KissMachineKinect
         private void Reader_ColorFrameArrived(ColorFrameReader sender, ColorFrameArrivedEventArgs args)
         {
             if (ShowTakenPhoto) return;
-            if (LowPerformanceMode)
+            if (SettingsService.LowPerformanceModeEnabled)
             {
                 _lowPerformanceFrameCounter++;
                 if (_lowPerformanceFrameCounter%2 != 0) return;
@@ -511,7 +507,7 @@ namespace KissMachineKinect
             {
                 case VirtualKey.Space:
                     // Take screenshot when releasing the space key
-                    if (UseSonyCamera && _sonyCameraService != null) await _sonyCameraService.PrepareTakePhoto();
+                    if (SettingsService.SonyCameraEnabled && _sonyCameraService != null) await _sonyCameraService.PrepareTakePhoto();
                     await TakePhoto();
                     break;
                 case VirtualKey.D:
@@ -843,7 +839,7 @@ namespace KissMachineKinect
             _photoCountdownTimer = new Timer(PhotoTimerCallback, null, TimeSpan.FromSeconds(CountdownSpeedInS), TimeSpan.FromSeconds(CountdownSpeedInS));
 
             // Prepare camera for taking a photo
-            if (UseSonyCamera)
+            if (SettingsService.SonyCameraEnabled && _sonyCameraService != null)
             {
                 try
                 {
@@ -934,8 +930,8 @@ namespace KissMachineKinect
         private async Task TakePhoto()
         {
             IncreasePhotoCounter();
-            var takePhotoWithCam = UseSonyCamera;
-            if (UseSonyCamera)
+            var takePhotoWithCam = SettingsService.SonyCameraEnabled && _sonyCameraService != null;
+            if (takePhotoWithCam)
             {
                 try
                 {
@@ -1012,7 +1008,7 @@ namespace KissMachineKinect
             {
                 // Set to invisible
                 await SetCountdown((int)KissCountdownStatusService.SpecialKissTexts.Invisible);
-                if (UseSonyCamera)
+                if (SettingsService.SonyCameraEnabled && _sonyCameraService != null)
                 {
                     try
                     {

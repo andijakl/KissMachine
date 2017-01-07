@@ -15,9 +15,10 @@
     <FileAlignment>512</FileAlignment>
     <SynthesizeLinkMetadata>true</SynthesizeLinkMetadata>
     <ProjectTypeGuids>{BC8A1FFA-BEE3-4634-8014-F334798102B3};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <PackageCertificateKeyFile>KissMachineKinect.Windows_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <PackageCertificateKeyFile>KissMachineKinect.Windows_StoreKey.pfx</PackageCertificateKeyFile>
     <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
-    <AppxBundlePlatforms>x64</AppxBundlePlatforms>
+    <AppxBundlePlatforms>x86|x64</AppxBundlePlatforms>
+    <PackageCertificateThumbprint>9FF66097342AAB554E2D4AC455B0CEE78FA4AA42</PackageCertificateThumbprint>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -105,27 +106,6 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
-    <SDKReference Include="Microsoft.Kinect.Face, Version=2.0">
-      <Name>Microsoft.Kinect.Face</Name>
-    </SDKReference>
-    <SDKReference Include="Microsoft.Kinect.Fusion, Version=2.0">
-      <Name>Microsoft.Kinect.Fusion</Name>
-    </SDKReference>
-    <SDKReference Include="Microsoft.Kinect.Toolkit.Input, version=2.0">
-      <Name>Microsoft.Kinect.Toolkit.Input</Name>
-    </SDKReference>
-    <SDKReference Include="Microsoft.Kinect.Xaml.Controls, Version=2.0">
-      <Name>Microsoft.Kinect.Xaml.Controls</Name>
-    </SDKReference>
-    <SDKReference Include="Microsoft.VCLibs, version=12.0">
-      <Name>Microsoft Visual C++ 2013 Runtime Package for Windows</Name>
-    </SDKReference>
-    <SDKReference Include="WindowsPreview.Kinect, version=2.0">
-      <Name>WindowsPreview.Kinect</Name>
-    </SDKReference>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
@@ -137,6 +117,9 @@
     <Compile Include="Converter\CameraStatusToBrushConverter.cs" />
     <Compile Include="Converter\CountdownIntToStringConverter.cs" />
     <Compile Include="Converter\IntToVisibilityConverter.cs" />
+    <Compile Include="AboutSettingsFlyout.xaml.cs">
+      <DependentUpon>AboutSettingsFlyout.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -149,6 +132,7 @@
     <Compile Include="Properties\Annotations1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\KissCountdownStatusService.cs" />
+    <Compile Include="Services\SettingsService.cs" />
     <Compile Include="Services\SonyCameraService.cs" />
     <Compile Include="Services\SpeechService.cs" />
     <Compile Include="Utilities\DrawingUtils.cs" />
@@ -157,6 +141,7 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <None Include="KissMachineKinect.Windows_StoreKey.pfx" />
     <None Include="KissMachineKinect.Windows_TemporaryKey.pfx" />
     <None Include="packages.config">
       <SubType>Designer</SubType>
@@ -169,12 +154,17 @@
     <Content Include="Assets\SmallLogo.scale-100.png" />
     <Content Include="Assets\SplashScreen.scale-100.png" />
     <Content Include="Assets\StoreLogo.scale-100.png" />
+    <None Include="Package.StoreAssociation.xml" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="Controls\BusyControl.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="AboutSettingsFlyout.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -206,6 +196,26 @@
       <Project>{a1246c04-298d-4189-8ac8-2105288d2ec6}</Project>
       <Name>KzSsdpDiscoveryUniversal</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <SDKReference Include="Microsoft.Kinect.Face, Version=2.0">
+      <Name>Microsoft.Kinect.Face</Name>
+    </SDKReference>
+    <SDKReference Include="Microsoft.Kinect.Fusion, Version=2.0">
+      <Name>Microsoft.Kinect.Fusion</Name>
+    </SDKReference>
+    <SDKReference Include="Microsoft.Kinect.Toolkit.Input, Version=2.0">
+      <Name>Microsoft.Kinect.Toolkit.Input</Name>
+    </SDKReference>
+    <SDKReference Include="Microsoft.Kinect.Xaml.Controls, Version=2.0">
+      <Name>Microsoft.Kinect.Xaml.Controls</Name>
+    </SDKReference>
+    <SDKReference Include="Microsoft.VCLibs, version=12.0">
+      <Name>Microsoft Visual C++ 2013 Runtime Package for Windows</Name>
+    </SDKReference>
+    <SDKReference Include="WindowsPreview.Kinect, version=2.0">
+      <Name>WindowsPreview.Kinect</Name>
+    </SDKReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '12.0' ">
     <VisualStudioVersion>12.0</VisualStudioVersion>

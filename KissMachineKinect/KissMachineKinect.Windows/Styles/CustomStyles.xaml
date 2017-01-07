@@ -1,7 +1,7 @@
 ﻿<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:converter="using:KinectDemo.Converter">
+    xmlns:converter="using:KissMachineKinect.Converter">
 
     <converter:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
@@ -139,9 +139,9 @@
 
     <!-- Global Overrides -->
     <SolidColorBrush x:Key="ProgressBarIndeterminateForegroundThemeBrush" Color="{StaticResource CustomAccentColor}" />
-    <!--<ResourceDictionary.ThemeDictionaries>
-        <ResourceDictionary x:Key="Default">
-            <x:String x:Key="ProgressBarIndeterminateForegroundThemeBrush">Aquamarine</x:String>
-        </ResourceDictionary>
-    </ResourceDictionary.ThemeDictionaries>-->
+    <SolidColorBrush x:Key="ToggleSwitchCurtainBackgroundThemeBrush" Color="{StaticResource CustomAccentColor}" />
+    <SolidColorBrush x:Key="ToggleSwitchCurtainPointerOverBackgroundThemeBrush" Color="{StaticResource CustomAccentColorLight}" />
+    <SolidColorBrush x:Key="ToggleSwitchCurtainPressedBackgroundThemeBrush" Color="{StaticResource CustomAccentColorLight}" />
+
+
 </ResourceDictionary>

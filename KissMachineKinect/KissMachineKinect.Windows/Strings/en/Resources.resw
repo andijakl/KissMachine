@@ -117,6 +117,27 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="About.Text" xml:space="preserve">
+    <value>About</value>
+  </data>
+  <data name="AboutDevelopedBy.Text" xml:space="preserve">
+    <value>Developed by Andreas Jakl</value>
+  </data>
+  <data name="AboutGitHub.Content" xml:space="preserve">
+    <value>Project web site on GitHub</value>
+  </data>
+  <data name="AboutGitHub.NavigateUri" xml:space="preserve">
+    <value>https://github.com/andijakl/KissMachine</value>
+  </data>
+  <data name="AboutText.Text" xml:space="preserve">
+    <value>Kiss Machine</value>
+  </data>
+  <data name="AboutTwitter.Content" xml:space="preserve">
+    <value>Follow on Twitter</value>
+  </data>
+  <data name="AboutTwitter.NavigateUri" xml:space="preserve">
+    <value>https://www.twitter.com/andijakl</value>
+  </data>
   <data name="AnotherPhoto_00" xml:space="preserve">
     <value>Ah, you'd like to take another photo? Please wait a little ...</value>
   </data>
@@ -134,6 +155,17 @@
   </data>
   <data name="BusyLoading" xml:space="preserve">
     <value>Loading ...</value>
+  </data>
+  <data name="Description.Text" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="DescriptionText.Text" xml:space="preserve">
+    <value>A completely automated, augmented reality photo booth!
+Created for use at weddings and parties.
+
+Each person recognized by the app is marked with a heart in the face. If two persons get close enough together, they are encouraged to give each other a kiss. A countdown starts, after which the app takes a photo. This is stored in your photo library and is also shown on the screen for several seconds.
+
+The app interaction requires no haptic user interface: persons are recognized through the Microsoft Kinect, and the photos are automatically taken in the right moment. The interaction with your guests is done through text-to-speech and on-screen instructions.</value>
   </data>
   <data name="DownloadingPhoto" xml:space="preserve">
     <value>Please wait - transmitting photo ...</value>
@@ -157,16 +189,16 @@
     <value>Kiss one another!</value>
   </data>
   <data name="GiveAKiss_02" xml:space="preserve">
-    <value>Kiss each other!</value>
+    <value>Get closer and kiss!</value>
   </data>
   <data name="GiveAKiss_03" xml:space="preserve">
-    <value>Kiss each other!</value>
+    <value>Give each other a peck!</value>
   </data>
   <data name="GiveAKiss_04" xml:space="preserve">
-    <value>Kiss each other!</value>
+    <value>What about a kiss?</value>
   </data>
   <data name="GiveAKiss_05" xml:space="preserve">
-    <value>Kiss each other!</value>
+    <value>I want to see a kiss!</value>
   </data>
   <data name="KissThankYou_00" xml:space="preserve">
     <value>Thank you! I hope you like the photo!</value>
@@ -204,7 +236,43 @@
   <data name="MinDistanceText" xml:space="preserve">
     <value>Minimum distance [m]: {0:0.00}</value>
   </data>
+  <data name="Privacy.Text" xml:space="preserve">
+    <value>Privacy</value>
+  </data>
+  <data name="PrivacyText.Text" xml:space="preserve">
+    <value>The app does not collect any specific usage data. The captured photos are only stored locally on your PC in the photo library. At events, please ensure you have the permission of your guests to take photos. The complete source code of the app is available on GitHub under the open source GPL v3 license.</value>
+  </data>
   <data name="RemovedMinPairPlayerHint" xml:space="preserve">
     <value>I can't see you anymore! If you are hugging each other with too much enthusiasm, I sometimes have issues recognizing you.</value>
+  </data>
+  <data name="ResourceLanguage" xml:space="preserve">
+    <value>en</value>
+  </data>
+  <data name="Settings.Text" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsLowPerformance.Text" xml:space="preserve">
+    <value>Low Performance Mode</value>
+  </data>
+  <data name="SettingsLowPerformanceText.Text" xml:space="preserve">
+    <value>Activate on slow PCs. Shows less frames per second. That improves data processing, but results in a slower visual refresh.</value>
+  </data>
+  <data name="SettingsSony.Text" xml:space="preserve">
+    <value>Use Sony Camera</value>
+  </data>
+  <data name="SettingsSonyText.Text" xml:space="preserve">
+    <value>Take the photo with a Sony camera connected to the PC via WiFi Direct (instead of using the Kinect). The camera is completely remote controlled by the app. Tested with the Sony DSC-RX100M3.
+Note: restart the app after changing this setting! You still need the Kinect in addition for the live stream and tracking users.
+
+Instructions:
+1. Start the Remote Control mode on the camera, e.g., via "Smart Remote Control", "Turn Wi-Fi on" or "Control with Smartphone".
+2. Connect the PC to the Wi-Fi of the camera.
+3. Start this "Kiss Machine" app.</value>
+  </data>
+  <data name="SupportedCameras.Content" xml:space="preserve">
+    <value>Supported cameras</value>
+  </data>
+  <data name="SupportedCameras.NavigateUri" xml:space="preserve">
+    <value>https://developer.sony.com/develop/cameras/device-support/</value>
   </data>
 </root>

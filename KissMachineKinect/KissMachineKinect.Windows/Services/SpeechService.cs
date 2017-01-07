@@ -9,7 +9,7 @@ namespace KissMachineKinect.Services
 {
     public class SpeechService
     {
-        private const string PreferredLanguage = "de";
+        
         private SpeechSynthesizer _synthesizer;
         private readonly MediaElement _speakerMediaElement;
 
@@ -18,8 +18,10 @@ namespace KissMachineKinect.Services
             _speakerMediaElement = speakerMedia;
         }
 
-        public void Init()
+        public void Init(string preferredLanguage)
         {
+            // Modify this to set a specific preferred language
+            //preferredLanguage = "de";
             if (_synthesizer == null)
             {
                 _synthesizer = new SpeechSynthesizer();
@@ -29,7 +31,7 @@ namespace KissMachineKinect.Services
             foreach (var curVoice in voices)
             {
                 // Select German voice if available
-                if (curVoice.Language.Contains(PreferredLanguage))
+                if (curVoice.Language.Contains(preferredLanguage))
                 {
                     Debug.WriteLine("Found preferred voice");
                     _synthesizer.Voice = curVoice;

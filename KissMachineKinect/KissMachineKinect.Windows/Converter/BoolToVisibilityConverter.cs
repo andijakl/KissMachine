@@ -2,7 +2,7 @@
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Data;
 
-namespace KinectDemo.Converter
+namespace KissMachineKinect.Converter
 {
     public class BoolToVisibilityConverter : IValueConverter
     {
