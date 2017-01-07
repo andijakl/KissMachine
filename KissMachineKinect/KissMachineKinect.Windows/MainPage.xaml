@@ -45,10 +45,20 @@
         <Viewbox Stretch="Uniform" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                  Grid.Row="1" Grid.RowSpan="3" Grid.Column="0"
                  Visibility="{Binding PhotoCountDown, Converter={StaticResource IntToVisibilityConverter}}" >
-            <TextBlock x:Name="HeartBackground" Text="&#xEB52;" 
-                       FontFamily="Segoe MDL2 Assets" 
-                       Foreground="{StaticResource CustomAccentBrush}" FontSize="100" 
-                       HorizontalAlignment="Center" VerticalAlignment="Stretch"  />
+            <Path x:Name="HeartBackground" Data="M26.5625,6.25 C30.1107,6.25 33.4961,6.91732 36.7188,8.25195 C39.9414,9.58659 42.8223,11.5072 45.3613,14.0137 L50,18.7012 L54.6387,14.0137 C57.1777,11.5072 60.0586,9.58659 63.2812,8.25195 C66.5039,6.91732 69.8893,6.25 73.4375,6.25 C76.9857,6.25 80.3711,6.91732 83.5938,8.25195 C86.8164,9.58659 89.6973,11.5072 92.2363,14.0137 C93.9616,15.7389 95.402,17.627 96.5576,19.6777 C97.7132,21.7285 98.5758,23.8607 99.1455,26.0742 C99.7152,28.2878 100,30.542 100,32.8369 C100,35.1318 99.7152,37.3779 99.1455,39.5752 C98.5758,41.7725 97.7132,43.8965 96.5576,45.9473 C95.402,47.9981 93.9616,49.8861 92.2363,51.6113 L50,93.7988 L7.76367,51.6113 C6.03841,49.8861 4.59798,47.9981 3.44238,45.9473 C2.28678,43.8965 1.42415,41.7725 0.854492,39.5752 C0.284831,37.3779 0,35.1318 0,32.8369 C0,30.542 0.284831,28.2878 0.854492,26.0742 C1.42415,23.8607 2.28678,21.7285 3.44238,19.6777 C4.59798,17.627 6.03841,15.7389 7.76367,14.0137 C10.3027,11.5072 13.1836,9.58659 16.4062,8.25195 C19.6289,6.91732 23.0143,6.25 26.5625,6.25 z" 
+                HorizontalAlignment="Center" Height="87.549" RenderTransformOrigin="0.5,0.5" Stretch="Fill" UseLayoutRounding="False" VerticalAlignment="Stretch"  Width="100">
+                <Path.Fill>
+                    <SolidColorBrush Color="Red" Opacity="1"/>
+                </Path.Fill>
+                <Path.RenderTransform>
+                    <TransformGroup>
+                        <ScaleTransform/>
+                        <SkewTransform/>
+                        <RotateTransform/>
+                        <TranslateTransform/>
+                    </TransformGroup>
+                </Path.RenderTransform>
+            </Path>
         </Viewbox>
 
         <TextBlock x:Name="CountdownTxt" 
