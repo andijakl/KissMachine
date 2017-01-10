@@ -3,6 +3,8 @@
 A completely automated, augmented reality photo booth!
 To be used as an automated photo booth for weddings and parties. Uses Microsoft Kinect v2.
 
+[Download from the Windows Store](https://www.microsoft.com/store/apps/9n99s4gcbq7l)
+
 Each person recognized by the app is marked with a heart in the face. If two persons get close enough together, they are encouraged to give each other a kiss. A countdown starts, after which the app takes a photo. This is stored in your photo library and is also shown on the screen for several seconds.
 
 The app interaction requires no haptic user interface: persons are recognized through the Microsoft Kinect, and the photos are automatically taken in the right moment. The interaction with your guests is done through text-to-speech and on-screen instructions.
